@@ -1,0 +1,14 @@
+{
+  "name": "localyse-figma-plugin",
+  "version": "1.0.0",
+  "description": "Figma plugin to localise design frames into multiple locales using AI-powered translation",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.100.0",
+    "typescript": "^5.4.0"
+  },
+  "license": "MIT"
+}
