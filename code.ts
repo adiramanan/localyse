@@ -22,7 +22,7 @@ function collectTextNodes(node: SceneNode): TextNode[] {
 }
 
 /** Build a serialisable description of every text layer in a frame. */
-function extractTextLayers(frame: FrameNode | ComponentNode | InstanceNode) {
+function extractTextLayers(frame: SceneNode) {
   const textNodes = collectTextNodes(frame);
   return textNodes.map((t) => ({
     id: t.id,
@@ -46,31 +46,33 @@ async function exportFrameImage(node: SceneNode): Promise<Uint8Array> {
 }
 
 // ------------------------------------------------------------------
-// Selection watcher
+// Selection watcher — with generation counter to prevent races
 // ------------------------------------------------------------------
 
-let currentSelectionId: string | null = null;
+let selectionGeneration = 0;
 
 async function handleSelectionChange() {
+  const gen = ++selectionGeneration;
   const sel = figma.currentPage.selection;
+
   if (
     sel.length === 1 &&
     (sel[0].type === "FRAME" ||
       sel[0].type === "COMPONENT" ||
       sel[0].type === "INSTANCE" ||
-      sel[0].type === "GROUP")
+      sel[0].type === "GROUP" ||
+      sel[0].type === "SECTION")
   ) {
     const node = sel[0];
-    currentSelectionId = node.id;
 
     // Export image
     const imageBytes = await exportFrameImage(node);
 
+    // Bail if selection changed while we were exporting
+    if (gen !== selectionGeneration) return;
+
     // Extract text layers
-    const textLayers =
-      "children" in node
-        ? extractTextLayers(node as FrameNode)
-        : [];
+    const textLayers = extractTextLayers(node);
 
     // Send to UI
     figma.ui.postMessage({
@@ -85,7 +87,6 @@ async function handleSelectionChange() {
       },
     });
   } else {
-    currentSelectionId = null;
     figma.ui.postMessage({ type: "no-selection" });
   }
 }
@@ -102,49 +103,83 @@ figma.ui.onmessage = async (msg) => {
   // --- Apply translations to duplicated frames ---
   if (msg.type === "apply-translations") {
     const { sourceFrameId, translations } = msg;
-    // translations: Array<{ locale: string, layers: Array<{ id: string, translated: string }> }>
 
-    const sourceNode = figma.getNodeById(sourceFrameId);
+    // --- Input validation ---
+    if (typeof sourceFrameId !== "string" || !Array.isArray(translations)) {
+      figma.notify("Invalid translation payload.", { error: true });
+      figma.ui.postMessage({ type: "apply-done" });
+      return;
+    }
+    // Validate each translation entry
+    for (const t of translations) {
+      if (typeof t.locale !== "string" || !Array.isArray(t.layers)) {
+        figma.notify("Invalid translation entry.", { error: true });
+        figma.ui.postMessage({ type: "apply-done" });
+        return;
+      }
+      for (const layer of t.layers) {
+        if (typeof layer.id !== "string" || typeof layer.translated !== "string") {
+          figma.notify("Invalid translation layer data.", { error: true });
+          figma.ui.postMessage({ type: "apply-done" });
+          return;
+        }
+      }
+    }
+
+    const sourceNode = figma.getNodeById(sourceFrameId) as SceneNode | null;
     if (!sourceNode || !("clone" in sourceNode)) {
       figma.notify("Original frame not found.", { error: true });
+      figma.ui.postMessage({ type: "apply-done" });
       return;
     }
 
-    const parent = sourceNode.parent;
-    let offsetX = (sourceNode as SceneNode).width + 100;
+    const source = sourceNode as FrameNode;
+    let offsetX = source.width + 100;
 
     for (const t of translations) {
-      const clone = (sourceNode as FrameNode).clone();
-      clone.name = `${(sourceNode as FrameNode).name} — ${t.locale}`;
-      if (parent && "appendChild" in parent) {
-        (parent as any).appendChild(clone);
-      }
-      clone.x = (sourceNode as FrameNode).x + offsetX;
-      clone.y = (sourceNode as FrameNode).y;
+      // clone() automatically inserts into the same parent
+      const clone = source.clone();
+      clone.name = `${source.name} — ${t.locale}`;
+      clone.x = source.x + offsetX;
+      clone.y = source.y;
       offsetX += clone.width + 100;
 
       // Walk text layers in the clone and apply translated text
       const cloneTextNodes = collectTextNodes(clone);
-      // Build a map from original text → translated text
+      const sourceTextNodes = collectTextNodes(source);
+
+      // Build a map from original node id → translated text
       const layerMap = new Map<string, string>();
       for (const layer of t.layers) {
         layerMap.set(layer.id, layer.translated);
       }
 
-      // Match by original node id suffix (clone preserves structure but gets new ids)
-      // Instead we match by original characters + layer name
-      const sourceTextNodes = collectTextNodes(sourceNode as FrameNode);
+      // Match clone text nodes by index (clone preserves tree structure/order)
       for (let i = 0; i < sourceTextNodes.length && i < cloneTextNodes.length; i++) {
         const originalId = sourceTextNodes[i].id;
-        if (layerMap.has(originalId)) {
-          const cloneText = cloneTextNodes[i];
-          const newText = layerMap.get(originalId)!;
-          // Load fonts used in this text node
-          const fontsToLoad = cloneText.getRangeAllFontNames(0, cloneText.characters.length);
+        if (!layerMap.has(originalId)) continue;
+
+        const cloneText = cloneTextNodes[i];
+        const newText = layerMap.get(originalId)!;
+
+        // Skip empty text nodes — getRangeAllFontNames(0, 0) would throw
+        if (cloneText.characters.length === 0) continue;
+
+        try {
+          // Load every font used in this text node before mutating
+          const fontsToLoad = cloneText.getRangeAllFontNames(
+            0,
+            cloneText.characters.length
+          );
           for (const font of fontsToLoad) {
             await figma.loadFontAsync(font);
           }
           cloneText.characters = newText;
+        } catch (err) {
+          // If a specific font can't be loaded, skip this layer but continue
+          console.error(
+            `[Localyse] Could not set text for "${cloneText.name}": ${err}`
+          );
         }
       }
     }
@@ -155,7 +190,11 @@ figma.ui.onmessage = async (msg) => {
 
   // --- Resize plugin window ---
   if (msg.type === "resize") {
-    figma.ui.resize(msg.width, msg.height);
+    const w = Number(msg.width);
+    const h = Number(msg.height);
+    if (Number.isFinite(w) && Number.isFinite(h) && w > 0 && h > 0 && w <= 2000 && h <= 2000) {
+      figma.ui.resize(w, h);
+    }
   }
 
   // --- Close plugin ---

@@ -8,6 +8,7 @@
   },
   "devDependencies": {
     "@figma/plugin-typings": "^1.100.0",
+    "puppeteer": "^24.37.2",
     "typescript": "^5.4.0"
   },
   "license": "MIT"

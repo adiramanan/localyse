@@ -7,7 +7,9 @@
     "noEmit": false,
     "outDir": ".",
     "rootDir": ".",
-    "typeRoots": ["./node_modules/@types", "./node_modules/@figma"]
+    "typeRoots": ["./node_modules/@figma"],
+    "types": ["plugin-typings"],
+    "skipLibCheck": true
   },
   "include": ["code.ts"],
   "exclude": ["node_modules"]

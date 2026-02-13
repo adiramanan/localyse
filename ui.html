@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src blob: data:; connect-src https://api.openai.com;" />
 <style>
 /* ------------------------------------------------------------------ */
 /*  RESET & BASE                                                      */
@@ -500,7 +502,10 @@ function renderView() {
   $mainContent.classList.remove("hidden");
   $stepIndicator.textContent = "Configure locales";
 
-  // Frame preview
+  // Frame preview — revoke previous blob URL to prevent memory leak
+  if ($frameImage.src && $frameImage.src.startsWith("blob:")) {
+    URL.revokeObjectURL($frameImage.src);
+  }
   const blob = new Blob([new Uint8Array(selectedFrame.imageBytes)], { type: "image/png" });
   $frameImage.src = URL.createObjectURL(blob);
   $frameName.textContent = selectedFrame.name;
@@ -554,15 +559,26 @@ function renderLocaleRows() {
 
     selWrap.appendChild(sel);
 
-    // Info line
+    // Info line — built with safe DOM methods
     if (row.code) {
       const meta = LOCALES.find(l => l.code === row.code);
       if (meta) {
         const info = document.createElement("div");
         info.className = "locale-info";
-        info.innerHTML =
-          meta.languages.map(l => '<span class="tag">' + l + '</span>').join("") +
-          meta.currencies.map(c => '<span class="tag" style="background:var(--accent-light);color:var(--accent);">' + c + '</span>').join("");
+        meta.languages.forEach(l => {
+          const tag = document.createElement("span");
+          tag.className = "tag";
+          tag.textContent = l;
+          info.appendChild(tag);
+        });
+        meta.currencies.forEach(c => {
+          const tag = document.createElement("span");
+          tag.className = "tag";
+          tag.style.background = "var(--accent-light)";
+          tag.style.color = "var(--accent)";
+          tag.textContent = c;
+          info.appendChild(tag);
+        });
         selWrap.appendChild(info);
       }
     }
@@ -623,12 +639,20 @@ function renderResults() {
     card.className = "result-card fade-in";
     card.style.animationDelay = (idx * 80) + "ms";
 
+    // Build header with safe DOM methods (no innerHTML for user-influenced data)
     const header = document.createElement("div");
     header.className = "result-header open";
-    header.innerHTML =
-      '<span class="flag">' + (res.localeMeta ? res.localeMeta.flag : "") + '</span>' +
-      '<span>' + res.locale + '</span>' +
-      '<span class="chevron">▼</span>';
+    const flagSpan = document.createElement("span");
+    flagSpan.className = "flag";
+    flagSpan.textContent = res.localeMeta ? res.localeMeta.flag : "";
+    const labelSpan = document.createElement("span");
+    labelSpan.textContent = res.locale;
+    const chevronSpan = document.createElement("span");
+    chevronSpan.className = "chevron";
+    chevronSpan.textContent = "\u25BC";
+    header.appendChild(flagSpan);
+    header.appendChild(labelSpan);
+    header.appendChild(chevronSpan);
 
     const body = document.createElement("div");
     body.className = "result-body open";
@@ -636,10 +660,23 @@ function renderResults() {
     res.layers.forEach(layer => {
       const row = document.createElement("div");
       row.className = "translation-row";
-      row.innerHTML =
-        '<span class="translation-original" title="' + escHtml(layer.original) + '">' + escHtml(layer.original) + '</span>' +
-        '<span class="translation-arrow">→</span>' +
-        '<span class="translation-translated">' + escHtml(layer.translated) + '</span>';
+
+      const origSpan = document.createElement("span");
+      origSpan.className = "translation-original";
+      origSpan.textContent = layer.original;
+      origSpan.title = layer.original;
+
+      const arrowSpan = document.createElement("span");
+      arrowSpan.className = "translation-arrow";
+      arrowSpan.textContent = "\u2192";
+
+      const transSpan = document.createElement("span");
+      transSpan.className = "translation-translated";
+      transSpan.textContent = layer.translated;
+
+      row.appendChild(origSpan);
+      row.appendChild(arrowSpan);
+      row.appendChild(transSpan);
       body.appendChild(row);
     });
 
@@ -654,7 +691,16 @@ function renderResults() {
   });
 }
 
-function escHtml(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+/** Escape HTML for both element content and attribute values. */
+function escHtml(s) {
+  if (typeof s !== "string") return "";
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 // ==================================================================
 // LOCALE ROW MANAGEMENT
@@ -782,11 +828,25 @@ Return a JSON array (same order) with objects: { "id": "<layer id>", "translated
   });
 
   if (!response.ok) {
-    const errBody = await response.text();
-    throw new Error("OpenAI API error " + response.status + ": " + errBody);
+    let errSummary = "HTTP " + response.status;
+    try {
+      const errJson = await response.json();
+      if (errJson && errJson.error && errJson.error.message) {
+        // Only show the API's error message, truncated for safety
+        errSummary = String(errJson.error.message).slice(0, 200);
+      }
+    } catch (_) { /* non-JSON error body — keep generic message */ }
+    throw new Error("OpenAI API error: " + errSummary);
   }
 
   const data = await response.json();
+
+  // Validate response structure
+  if (!data || !Array.isArray(data.choices) || !data.choices[0] ||
+      !data.choices[0].message || typeof data.choices[0].message.content !== "string") {
+    throw new Error("Unexpected response structure from OpenAI API.");
+  }
+
   let content = data.choices[0].message.content.trim();
 
   // Strip markdown fences if present
@@ -794,15 +854,27 @@ Return a JSON array (same order) with objects: { "id": "<layer id>", "translated
     content = content.replace(/^```[\w]*\n?/, "").replace(/\n?```$/, "");
   }
 
-  const translatedArray = JSON.parse(content);
+  let translatedArray;
+  try {
+    translatedArray = JSON.parse(content);
+  } catch (parseErr) {
+    throw new Error("Failed to parse translation response as JSON.");
+  }
 
-  // Merge back with original text
+  if (!Array.isArray(translatedArray)) {
+    throw new Error("Translation response is not an array.");
+  }
+
+  // Merge back with original text — only accept string values
   return textLayers.map(layer => {
-    const match = translatedArray.find(t => t.id === layer.id);
+    const match = translatedArray.find(t => t && t.id === layer.id);
+    const translated = (match && typeof match.translated === "string")
+      ? match.translated
+      : layer.characters;
     return {
       id: layer.id,
       original: layer.characters,
-      translated: match ? match.translated : layer.characters,
+      translated: translated,
     };
   });
 }
@@ -825,7 +897,7 @@ function applyTranslations() {
       sourceFrameId: selectedFrame.id,
       translations: payload,
     }
-  }, "*");
+  }, "*"); // Figma requires "*" — plugin iframe is sandboxed with null origin
 
   showToast("Applying translations to canvas…", "success");
 }
@@ -842,8 +914,10 @@ function resetResults() {
 // ==================================================================
 
 window.onmessage = (event) => {
-  const msg = event.data.pluginMessage;
-  if (!msg) return;
+  // Only accept messages from the parent frame (Figma sandbox)
+  if (event.source !== window.parent && event.source !== window) return;
+  const msg = event.data && event.data.pluginMessage;
+  if (!msg || typeof msg.type !== "string") return;
 
   if (msg.type === "frame-selected") {
     selectedFrame = msg.payload;
