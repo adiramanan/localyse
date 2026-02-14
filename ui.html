@@ -616,6 +616,20 @@
       color: var(--success);
       border: 1px solid #b8e6cc;
     }
+
+    .privacy-link {
+      display: block;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-tertiary);
+      text-decoration: none;
+      margin-top: 8px;
+      transition: color var(--transition);
+    }
+
+    .privacy-link:hover {
+      color: var(--text-secondary);
+    }
   </style>
 </head>
 
@@ -713,6 +727,8 @@
     <button class="btn-primary" id="generateBtn" disabled>
       Generate Translations
     </button>
+    <a class="privacy-link" href="https://localyse-proxy.adiramanan98.workers.dev/privacy" target="_blank">Privacy
+      Policy</a>
   </div>
 
   <!-- ================================================================ -->
@@ -723,48 +739,89 @@
     // LOCALE DATA
     // ==================================================================
     const LOCALES = [
-      { code: "ar-SA", label: "Arabic (Saudi Arabia)", flag: "🇸🇦", languages: ["Arabic"], currencies: ["SAR"] },
-      { code: "bn-BD", label: "Bengali (Bangladesh)", flag: "🇧🇩", languages: ["Bengali"], currencies: ["BDT"] },
-      { code: "zh-CN", label: "Chinese Simplified (China)", flag: "🇨🇳", languages: ["Chinese (Simplified)"], currencies: ["CNY"] },
-      { code: "zh-TW", label: "Chinese Traditional (Taiwan)", flag: "🇹🇼", languages: ["Chinese (Traditional)"], currencies: ["TWD"] },
-      { code: "cs-CZ", label: "Czech (Czechia)", flag: "🇨🇿", languages: ["Czech"], currencies: ["CZK"] },
-      { code: "da-DK", label: "Danish (Denmark)", flag: "🇩🇰", languages: ["Danish"], currencies: ["DKK"] },
-      { code: "nl-NL", label: "Dutch (Netherlands)", flag: "🇳🇱", languages: ["Dutch"], currencies: ["EUR"] },
-      { code: "en-AU", label: "English (Australia)", flag: "🇦🇺", languages: ["English"], currencies: ["AUD"] },
-      { code: "en-CA", label: "English (Canada)", flag: "🇨🇦", languages: ["English", "French"], currencies: ["CAD"] },
-      { code: "en-GB", label: "English (United Kingdom)", flag: "🇬🇧", languages: ["English"], currencies: ["GBP"] },
-      { code: "en-IN", label: "English (India)", flag: "🇮🇳", languages: ["English", "Hindi"], currencies: ["INR"] },
-      { code: "en-US", label: "English (United States)", flag: "🇺🇸", languages: ["English"], currencies: ["USD"] },
-      { code: "fi-FI", label: "Finnish (Finland)", flag: "🇫🇮", languages: ["Finnish", "Swedish"], currencies: ["EUR"] },
-      { code: "fr-CA", label: "French (Canada)", flag: "🇨🇦", languages: ["French", "English"], currencies: ["CAD"] },
-      { code: "fr-FR", label: "French (France)", flag: "🇫🇷", languages: ["French"], currencies: ["EUR"] },
-      { code: "de-AT", label: "German (Austria)", flag: "🇦🇹", languages: ["German"], currencies: ["EUR"] },
-      { code: "de-CH", label: "German (Switzerland)", flag: "🇨🇭", languages: ["German", "French", "Italian", "Romansh"], currencies: ["CHF"] },
-      { code: "de-DE", label: "German (Germany)", flag: "🇩🇪", languages: ["German"], currencies: ["EUR"] },
-      { code: "el-GR", label: "Greek (Greece)", flag: "🇬🇷", languages: ["Greek"], currencies: ["EUR"] },
-      { code: "he-IL", label: "Hebrew (Israel)", flag: "🇮🇱", languages: ["Hebrew"], currencies: ["ILS"] },
-      { code: "hi-IN", label: "Hindi (India)", flag: "🇮🇳", languages: ["Hindi", "English"], currencies: ["INR"] },
-      { code: "hu-HU", label: "Hungarian (Hungary)", flag: "🇭🇺", languages: ["Hungarian"], currencies: ["HUF"] },
-      { code: "id-ID", label: "Indonesian (Indonesia)", flag: "🇮🇩", languages: ["Indonesian"], currencies: ["IDR"] },
-      { code: "it-IT", label: "Italian (Italy)", flag: "🇮🇹", languages: ["Italian"], currencies: ["EUR"] },
-      { code: "ja-JP", label: "Japanese (Japan)", flag: "🇯🇵", languages: ["Japanese"], currencies: ["JPY"] },
-      { code: "ko-KR", label: "Korean (South Korea)", flag: "🇰🇷", languages: ["Korean"], currencies: ["KRW"] },
-      { code: "ms-MY", label: "Malay (Malaysia)", flag: "🇲🇾", languages: ["Malay", "English"], currencies: ["MYR"] },
-      { code: "nb-NO", label: "Norwegian Bokmål (Norway)", flag: "🇳🇴", languages: ["Norwegian Bokmål", "Norwegian Nynorsk"], currencies: ["NOK"] },
-      { code: "pl-PL", label: "Polish (Poland)", flag: "🇵🇱", languages: ["Polish"], currencies: ["PLN"] },
-      { code: "pt-BR", label: "Portuguese (Brazil)", flag: "🇧🇷", languages: ["Portuguese"], currencies: ["BRL"] },
-      { code: "pt-PT", label: "Portuguese (Portugal)", flag: "🇵🇹", languages: ["Portuguese"], currencies: ["EUR"] },
-      { code: "ro-RO", label: "Romanian (Romania)", flag: "🇷🇴", languages: ["Romanian"], currencies: ["RON"] },
-      { code: "ru-RU", label: "Russian (Russia)", flag: "🇷🇺", languages: ["Russian"], currencies: ["RUB"] },
-      { code: "es-AR", label: "Spanish (Argentina)", flag: "🇦🇷", languages: ["Spanish"], currencies: ["ARS"] },
-      { code: "es-ES", label: "Spanish (Spain)", flag: "🇪🇸", languages: ["Spanish", "Catalan", "Galician", "Basque"], currencies: ["EUR"] },
-      { code: "es-MX", label: "Spanish (Mexico)", flag: "🇲🇽", languages: ["Spanish"], currencies: ["MXN"] },
-      { code: "sv-SE", label: "Swedish (Sweden)", flag: "🇸🇪", languages: ["Swedish"], currencies: ["SEK"] },
-      { code: "th-TH", label: "Thai (Thailand)", flag: "🇹🇭", languages: ["Thai"], currencies: ["THB"] },
-      { code: "tr-TR", label: "Turkish (Turkey)", flag: "🇹🇷", languages: ["Turkish"], currencies: ["TRY"] },
-      { code: "uk-UA", label: "Ukrainian (Ukraine)", flag: "🇺🇦", languages: ["Ukrainian"], currencies: ["UAH"] },
-      { code: "vi-VN", label: "Vietnamese (Vietnam)", flag: "🇻🇳", languages: ["Vietnamese"], currencies: ["VND"] },
-      { code: "zu-ZA", label: "Zulu (South Africa)", flag: "🇿🇦", languages: ["Zulu", "English", "Afrikaans", "Xhosa"], currencies: ["ZAR"] },
+      { code: "af-ZA", azureCode: "af", label: "Afrikaans (South Africa)", flag: "🇿🇦", languages: ["Afrikaans"], currencies: ["ZAR"] },
+      { code: "am-ET", azureCode: "am", label: "Amharic (Ethiopia)", flag: "🇪🇹", languages: ["Amharic"], currencies: ["ETB"] },
+      { code: "ar-SA", azureCode: "ar", label: "Arabic (Saudi Arabia)", flag: "🇸🇦", languages: ["Arabic"], currencies: ["SAR"] },
+      { code: "az-AZ", azureCode: "az", label: "Azerbaijani (Azerbaijan)", flag: "🇦🇿", languages: ["Azerbaijani"], currencies: ["AZN"] },
+      { code: "bg-BG", azureCode: "bg", label: "Bulgarian (Bulgaria)", flag: "🇧🇬", languages: ["Bulgarian"], currencies: ["BGN"] },
+      { code: "bn-BD", azureCode: "bn", label: "Bengali (Bangladesh)", flag: "🇧🇩", languages: ["Bengali"], currencies: ["BDT"] },
+      { code: "bs-BA", azureCode: "bs", label: "Bosnian (Bosnia)", flag: "🇧🇦", languages: ["Bosnian"], currencies: ["BAM"] },
+      { code: "ca-ES", azureCode: "ca", label: "Catalan (Spain)", flag: "🇪🇸", languages: ["Catalan"], currencies: ["EUR"] },
+      { code: "cs-CZ", azureCode: "cs", label: "Czech (Czechia)", flag: "🇨🇿", languages: ["Czech"], currencies: ["CZK"] },
+      { code: "cy-GB", azureCode: "cy", label: "Welsh (United Kingdom)", flag: "🏴\u200d☠️", languages: ["Welsh"], currencies: ["GBP"] },
+      { code: "da-DK", azureCode: "da", label: "Danish (Denmark)", flag: "🇩🇰", languages: ["Danish"], currencies: ["DKK"] },
+      { code: "de-AT", azureCode: "de", label: "German (Austria)", flag: "🇦🇹", languages: ["German"], currencies: ["EUR"] },
+      { code: "de-CH", azureCode: "de", label: "German (Switzerland)", flag: "🇨🇭", languages: ["German", "French", "Italian"], currencies: ["CHF"] },
+      { code: "de-DE", azureCode: "de", label: "German (Germany)", flag: "🇩🇪", languages: ["German"], currencies: ["EUR"] },
+      { code: "el-GR", azureCode: "el", label: "Greek (Greece)", flag: "🇬🇷", languages: ["Greek"], currencies: ["EUR"] },
+      { code: "en-AU", azureCode: "en", label: "English (Australia)", flag: "🇦🇺", languages: ["English"], currencies: ["AUD"] },
+      { code: "en-CA", azureCode: "en", label: "English (Canada)", flag: "🇨🇦", languages: ["English", "French"], currencies: ["CAD"] },
+      { code: "en-GB", azureCode: "en", label: "English (United Kingdom)", flag: "🇬🇧", languages: ["English"], currencies: ["GBP"] },
+      { code: "en-IN", azureCode: "en", label: "English (India)", flag: "🇮🇳", languages: ["English", "Hindi"], currencies: ["INR"] },
+      { code: "en-US", azureCode: "en", label: "English (United States)", flag: "🇺🇸", languages: ["English"], currencies: ["USD"] },
+      { code: "es-AR", azureCode: "es", label: "Spanish (Argentina)", flag: "🇦🇷", languages: ["Spanish"], currencies: ["ARS"] },
+      { code: "es-ES", azureCode: "es", label: "Spanish (Spain)", flag: "🇪🇸", languages: ["Spanish", "Catalan", "Galician", "Basque"], currencies: ["EUR"] },
+      { code: "es-MX", azureCode: "es", label: "Spanish (Mexico)", flag: "🇲🇽", languages: ["Spanish"], currencies: ["MXN"] },
+      { code: "et-EE", azureCode: "et", label: "Estonian (Estonia)", flag: "🇪🇪", languages: ["Estonian"], currencies: ["EUR"] },
+      { code: "fa-IR", azureCode: "fa", label: "Persian (Iran)", flag: "🇮🇷", languages: ["Persian"], currencies: ["IRR"] },
+      { code: "fi-FI", azureCode: "fi", label: "Finnish (Finland)", flag: "🇫🇮", languages: ["Finnish", "Swedish"], currencies: ["EUR"] },
+      { code: "fil-PH", azureCode: "fil", label: "Filipino (Philippines)", flag: "🇵🇭", languages: ["Filipino", "English"], currencies: ["PHP"] },
+      { code: "fr-CA", azureCode: "fr-ca", label: "French (Canada)", flag: "🇨🇦", languages: ["French", "English"], currencies: ["CAD"] },
+      { code: "fr-FR", azureCode: "fr", label: "French (France)", flag: "🇫🇷", languages: ["French"], currencies: ["EUR"] },
+      { code: "ga-IE", azureCode: "ga", label: "Irish (Ireland)", flag: "🇮🇪", languages: ["Irish", "English"], currencies: ["EUR"] },
+      { code: "gu-IN", azureCode: "gu", label: "Gujarati (India)", flag: "🇮🇳", languages: ["Gujarati"], currencies: ["INR"] },
+      { code: "he-IL", azureCode: "he", label: "Hebrew (Israel)", flag: "🇮🇱", languages: ["Hebrew"], currencies: ["ILS"] },
+      { code: "hi-IN", azureCode: "hi", label: "Hindi (India)", flag: "🇮🇳", languages: ["Hindi", "English"], currencies: ["INR"] },
+      { code: "hr-HR", azureCode: "hr", label: "Croatian (Croatia)", flag: "🇭🇷", languages: ["Croatian"], currencies: ["EUR"] },
+      { code: "hu-HU", azureCode: "hu", label: "Hungarian (Hungary)", flag: "🇭🇺", languages: ["Hungarian"], currencies: ["HUF"] },
+      { code: "hy-AM", azureCode: "hy", label: "Armenian (Armenia)", flag: "🇦🇲", languages: ["Armenian"], currencies: ["AMD"] },
+      { code: "id-ID", azureCode: "id", label: "Indonesian (Indonesia)", flag: "🇮🇩", languages: ["Indonesian"], currencies: ["IDR"] },
+      { code: "is-IS", azureCode: "is", label: "Icelandic (Iceland)", flag: "🇮🇸", languages: ["Icelandic"], currencies: ["ISK"] },
+      { code: "it-IT", azureCode: "it", label: "Italian (Italy)", flag: "🇮🇹", languages: ["Italian"], currencies: ["EUR"] },
+      { code: "ja-JP", azureCode: "ja", label: "Japanese (Japan)", flag: "🇯🇵", languages: ["Japanese"], currencies: ["JPY"] },
+      { code: "ka-GE", azureCode: "ka", label: "Georgian (Georgia)", flag: "🇬🇪", languages: ["Georgian"], currencies: ["GEL"] },
+      { code: "kk-KZ", azureCode: "kk", label: "Kazakh (Kazakhstan)", flag: "🇰🇿", languages: ["Kazakh", "Russian"], currencies: ["KZT"] },
+      { code: "km-KH", azureCode: "km", label: "Khmer (Cambodia)", flag: "🇰🇭", languages: ["Khmer"], currencies: ["KHR"] },
+      { code: "kn-IN", azureCode: "kn", label: "Kannada (India)", flag: "🇮🇳", languages: ["Kannada"], currencies: ["INR"] },
+      { code: "ko-KR", azureCode: "ko", label: "Korean (South Korea)", flag: "🇰🇷", languages: ["Korean"], currencies: ["KRW"] },
+      { code: "lo-LA", azureCode: "lo", label: "Lao (Laos)", flag: "🇱🇦", languages: ["Lao"], currencies: ["LAK"] },
+      { code: "lt-LT", azureCode: "lt", label: "Lithuanian (Lithuania)", flag: "🇱🇹", languages: ["Lithuanian"], currencies: ["EUR"] },
+      { code: "lv-LV", azureCode: "lv", label: "Latvian (Latvia)", flag: "🇱🇻", languages: ["Latvian"], currencies: ["EUR"] },
+      { code: "mk-MK", azureCode: "mk", label: "Macedonian (North Macedonia)", flag: "🇲🇰", languages: ["Macedonian"], currencies: ["MKD"] },
+      { code: "ml-IN", azureCode: "ml", label: "Malayalam (India)", flag: "🇮🇳", languages: ["Malayalam"], currencies: ["INR"] },
+      { code: "mn-MN", azureCode: "mn-Cyrl", label: "Mongolian (Mongolia)", flag: "🇲🇳", languages: ["Mongolian"], currencies: ["MNT"] },
+      { code: "mr-IN", azureCode: "mr", label: "Marathi (India)", flag: "🇮🇳", languages: ["Marathi"], currencies: ["INR"] },
+      { code: "ms-MY", azureCode: "ms", label: "Malay (Malaysia)", flag: "🇲🇾", languages: ["Malay", "English"], currencies: ["MYR"] },
+      { code: "mt-MT", azureCode: "mt", label: "Maltese (Malta)", flag: "🇲🇹", languages: ["Maltese", "English"], currencies: ["EUR"] },
+      { code: "my-MM", azureCode: "my", label: "Myanmar (Myanmar)", flag: "🇲🇲", languages: ["Burmese"], currencies: ["MMK"] },
+      { code: "nb-NO", azureCode: "nb", label: "Norwegian Bokmål (Norway)", flag: "🇳🇴", languages: ["Norwegian Bokmål"], currencies: ["NOK"] },
+      { code: "ne-NP", azureCode: "ne", label: "Nepali (Nepal)", flag: "🇳🇵", languages: ["Nepali"], currencies: ["NPR"] },
+      { code: "nl-NL", azureCode: "nl", label: "Dutch (Netherlands)", flag: "🇳🇱", languages: ["Dutch"], currencies: ["EUR"] },
+      { code: "pa-IN", azureCode: "pa", label: "Punjabi (India)", flag: "🇮🇳", languages: ["Punjabi"], currencies: ["INR"] },
+      { code: "pl-PL", azureCode: "pl", label: "Polish (Poland)", flag: "🇵🇱", languages: ["Polish"], currencies: ["PLN"] },
+      { code: "ps-AF", azureCode: "ps", label: "Pashto (Afghanistan)", flag: "🇦🇫", languages: ["Pashto"], currencies: ["AFN"] },
+      { code: "pt-BR", azureCode: "pt-br", label: "Portuguese (Brazil)", flag: "🇧🇷", languages: ["Portuguese"], currencies: ["BRL"] },
+      { code: "pt-PT", azureCode: "pt-pt", label: "Portuguese (Portugal)", flag: "🇵🇹", languages: ["Portuguese"], currencies: ["EUR"] },
+      { code: "ro-RO", azureCode: "ro", label: "Romanian (Romania)", flag: "🇷🇴", languages: ["Romanian"], currencies: ["RON"] },
+      { code: "ru-RU", azureCode: "ru", label: "Russian (Russia)", flag: "🇷🇺", languages: ["Russian"], currencies: ["RUB"] },
+      { code: "si-LK", azureCode: "si", label: "Sinhala (Sri Lanka)", flag: "🇱🇰", languages: ["Sinhala"], currencies: ["LKR"] },
+      { code: "sk-SK", azureCode: "sk", label: "Slovak (Slovakia)", flag: "🇸🇰", languages: ["Slovak"], currencies: ["EUR"] },
+      { code: "sl-SI", azureCode: "sl", label: "Slovenian (Slovenia)", flag: "🇸🇮", languages: ["Slovenian"], currencies: ["EUR"] },
+      { code: "sq-AL", azureCode: "sq", label: "Albanian (Albania)", flag: "🇦🇱", languages: ["Albanian"], currencies: ["ALL"] },
+      { code: "sr-RS", azureCode: "sr-Latn", label: "Serbian (Serbia)", flag: "🇷🇸", languages: ["Serbian"], currencies: ["RSD"] },
+      { code: "sv-SE", azureCode: "sv", label: "Swedish (Sweden)", flag: "🇸🇪", languages: ["Swedish"], currencies: ["SEK"] },
+      { code: "sw-KE", azureCode: "sw", label: "Swahili (Kenya)", flag: "🇰🇪", languages: ["Swahili", "English"], currencies: ["KES"] },
+      { code: "ta-IN", azureCode: "ta", label: "Tamil (India)", flag: "🇮🇳", languages: ["Tamil"], currencies: ["INR"] },
+      { code: "te-IN", azureCode: "te", label: "Telugu (India)", flag: "🇮🇳", languages: ["Telugu"], currencies: ["INR"] },
+      { code: "th-TH", azureCode: "th", label: "Thai (Thailand)", flag: "🇹🇭", languages: ["Thai"], currencies: ["THB"] },
+      { code: "tr-TR", azureCode: "tr", label: "Turkish (Turkey)", flag: "🇹🇷", languages: ["Turkish"], currencies: ["TRY"] },
+      { code: "uk-UA", azureCode: "uk", label: "Ukrainian (Ukraine)", flag: "🇺🇦", languages: ["Ukrainian"], currencies: ["UAH"] },
+      { code: "ur-PK", azureCode: "ur", label: "Urdu (Pakistan)", flag: "🇵🇰", languages: ["Urdu", "English"], currencies: ["PKR"] },
+      { code: "uz-UZ", azureCode: "uz", label: "Uzbek (Uzbekistan)", flag: "🇺🇿", languages: ["Uzbek"], currencies: ["UZS"] },
+      { code: "vi-VN", azureCode: "vi", label: "Vietnamese (Vietnam)", flag: "🇻🇳", languages: ["Vietnamese"], currencies: ["VND"] },
+      { code: "zh-CN", azureCode: "zh-Hans", label: "Chinese Simplified (China)", flag: "🇨🇳", languages: ["Chinese (Simplified)"], currencies: ["CNY"] },
+      { code: "zh-TW", azureCode: "zh-Hant", label: "Chinese Traditional (Taiwan)", flag: "🇹🇼", languages: ["Chinese (Traditional)"], currencies: ["TWD"] },
+      { code: "zu-ZA", azureCode: "zu", label: "Zulu (South Africa)", flag: "🇿🇦", languages: ["Zulu", "English", "Afrikaans"], currencies: ["ZAR"] },
     ];
 
     // ==================================================================
@@ -776,6 +833,7 @@
     let isSuccess = false;
     let successInfo = null;     // { count, locales: [{flag, label}] }
     let translationResults = null; // array of { locale, localeMeta, layers:[{id,original,translated}] }
+    let figmaUserId = "anonymous"; // received from plugin sandbox for rate limiting
 
     // ==================================================================
     // DOM REFS
@@ -809,6 +867,16 @@
       el.textContent = message;
       document.body.appendChild(el);
       setTimeout(() => el.remove(), 4000);
+    }
+
+    const PRIVACY_URL = "https://localyse-proxy.adiramanan98.workers.dev/privacy";
+    function appendPrivacyLink() {
+      const a = document.createElement("a");
+      a.className = "privacy-link";
+      a.href = PRIVACY_URL;
+      a.target = "_blank";
+      a.textContent = "Privacy Policy";
+      $footer.appendChild(a);
     }
 
     // ==================================================================
@@ -846,6 +914,7 @@
         btn.textContent = "Translate Another";
         btn.addEventListener("click", startOver);
         $footer.appendChild(btn);
+        appendPrivacyLink();
         return;
       }
 
@@ -980,6 +1049,7 @@
       btn.textContent = "Generate Translations";
       btn.addEventListener("click", startGeneration);
       $footer.appendChild(btn);
+      appendPrivacyLink();
     }
 
     function renderResults() {
@@ -1143,83 +1213,47 @@
     const WORKER_URL = "https://localyse-proxy.adiramanan98.workers.dev";
 
     async function translateLayers(textLayers, localeCode, localeMeta) {
-      // Build a structured prompt for GPT-4o-mini
-      const textsPayload = textLayers.map(l => ({
-        id: l.id,
-        layerName: l.name,
-        text: l.characters,
-      }));
-
-      const systemPrompt = `You are a professional UI content localiser. You will receive a JSON array of text layers extracted from a design frame. Your task is to translate/localise every text layer for the locale "${localeCode}" (${localeMeta.label}).
-
-RULES:
-1. **Language**: Translate all generic UI copy, labels, and body text into the primary language of the locale: ${localeMeta.languages[0]}.
-2. **Proper names (people)**: Transliterate or keep names of people as appropriate for the target locale. For example, "John Smith" stays as-is in French but may be transliterated in Japanese or Arabic.
-3. **Place names**: Use the commonly accepted local name for well-known places (e.g., "New York" → "Nueva York" in Spanish, "Londres" for London in French).
-4. **Currency**: If the text contains monetary values (e.g., "$49.99", "USD 100"), convert the currency symbol and code to one of the locale's currencies: ${localeMeta.currencies.join(", ")}. Keep the numeric value the same unless the locale typically uses a different decimal/thousands separator, in which case reformat accordingly.
-5. **Numbers & dates**: Reformat numbers and dates to match the locale conventions.
-6. **Keep it natural**: The translated text should read like native copy a designer would use.
-7. **Preserve placeholders**: If the text contains variables like {name} or {{count}}, keep them intact.
-8. **Short text**: For very short labels (1-3 words), keep the translation concise and of similar length.
-
-Return a JSON array (same order) with objects: { "id": "<layer id>", "translated": "<translated text>" }. Return ONLY the JSON array, no markdown fences, no extra text.`;
-
-      const userPrompt = JSON.stringify(textsPayload, null, 2);
+      const payload = {
+        textLayers: textLayers.map(l => ({
+          id: l.id,
+          layerName: l.name,
+          text: l.characters,
+        })),
+        targetLocale: localeMeta.azureCode || localeCode,
+      };
 
       const response = await fetch(WORKER_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-User-Id": figmaUserId,
         },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          temperature: 0.3,
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
-          ],
-        }),
+        body: JSON.stringify(payload),
       });
+
+      if (response.status === 429) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Daily limit reached (25/day). Please try again tomorrow.");
+      }
 
       if (!response.ok) {
         let errSummary = "HTTP " + response.status;
         try {
           const errJson = await response.json();
-          if (errJson && errJson.error && errJson.error.message) {
-            // Only show the API's error message, truncated for safety
-            errSummary = String(errJson.error.message).slice(0, 200);
+          if (errJson && errJson.error) {
+            errSummary = String(errJson.error).slice(0, 200);
           }
-        } catch (_) { /* non-JSON error body — keep generic message */ }
-        throw new Error("OpenAI API error: " + errSummary);
+        } catch (_) { }
+        throw new Error("Translation error: " + errSummary);
       }
 
-      const data = await response.json();
-
-      // Validate response structure
-      if (!data || !Array.isArray(data.choices) || !data.choices[0] ||
-        !data.choices[0].message || typeof data.choices[0].message.content !== "string") {
-        throw new Error("Unexpected response structure from OpenAI API.");
-      }
-
-      let content = data.choices[0].message.content.trim();
-
-      // Strip markdown fences if present
-      if (content.startsWith("```")) {
-        content = content.replace(/^```[\w]*\n?/, "").replace(/\n?```$/, "");
-      }
-
-      let translatedArray;
-      try {
-        translatedArray = JSON.parse(content);
-      } catch (parseErr) {
-        throw new Error("Failed to parse translation response as JSON.");
-      }
+      const translatedArray = await response.json();
 
       if (!Array.isArray(translatedArray)) {
-        throw new Error("Translation response is not an array.");
+        throw new Error("Unexpected response structure from translation service.");
       }
 
-      // Merge back with original text — only accept string values
+      // Merge back with original text
       return textLayers.map(layer => {
         const match = translatedArray.find(t => t && t.id === layer.id);
         const translated = (match && typeof match.translated === "string")
@@ -1279,6 +1313,10 @@ Return a JSON array (same order) with objects: { "id": "<layer id>", "translated
         selectedFrame = null;
         translationResults = null;
         renderView();
+      }
+
+      if (msg.type === "user-info") {
+        figmaUserId = msg.userId || "anonymous";
       }
 
       if (msg.type === "apply-done") {

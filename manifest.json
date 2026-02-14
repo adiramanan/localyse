@@ -1,11 +1,12 @@
 {
   "name": "Localyse",
-  "id": "localyse-figma-plugin",
   "api": "1.0.0",
   "main": "code.js",
   "ui": "ui.html",
-  "capabilities": [],
-  "enableProposedApi": false,
+  "documentAccess": "dynamic-page",
+  "permissions": [
+    "currentuser"
+  ],
   "editorType": [
     "figma"
   ],

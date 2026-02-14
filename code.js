@@ -1,7 +1,13 @@
 "use strict";
 // Localyse — Figma Plugin Main Code
 // Runs in the Figma sandbox (no DOM, no fetch)
+var _a;
 figma.showUI(__html__, { width: 480, height: 640, themeColors: true });
+// Send the current user's ID to the UI for rate-limiting identification
+figma.ui.postMessage({
+    type: "user-info",
+    userId: ((_a = figma.currentUser) === null || _a === void 0 ? void 0 : _a.id) || "anonymous",
+});
 // ------------------------------------------------------------------
 // Helpers
 // ------------------------------------------------------------------
@@ -109,7 +115,7 @@ figma.ui.onmessage = async (msg) => {
                 }
             }
         }
-        const sourceNode = figma.getNodeById(sourceFrameId);
+        const sourceNode = await figma.getNodeByIdAsync(sourceFrameId);
         if (!sourceNode || !("clone" in sourceNode)) {
             figma.notify("Original frame not found.", { error: true });
             figma.ui.postMessage({ type: "apply-done" });
