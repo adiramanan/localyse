@@ -134,7 +134,20 @@ figma.ui.onmessage = async (msg) => {
     }
 
     const source = sourceNode as FrameNode;
-    let offsetX = source.width + 100;
+    const GAP = 50;
+
+    // Count existing locale clones of this frame to calculate correct offset
+    // (handles incremental apply where locales arrive one at a time)
+    let existingClones = 0;
+    if (source.parent && "children" in source.parent) {
+      const prefix = source.name + " — ";
+      for (const sibling of source.parent.children) {
+        if (sibling.id !== source.id && sibling.name.startsWith(prefix)) {
+          existingClones++;
+        }
+      }
+    }
+    let offsetX = (source.width + GAP) * (existingClones + 1);
 
     for (const t of translations) {
       // clone() automatically inserts into the same parent
@@ -142,7 +155,7 @@ figma.ui.onmessage = async (msg) => {
       clone.name = `${source.name} — ${t.locale}`;
       clone.x = source.x + offsetX;
       clone.y = source.y;
-      offsetX += clone.width + 100;
+      offsetX += clone.width + GAP;
 
       // Walk text layers in the clone and apply translated text
       const cloneTextNodes = collectTextNodes(clone);

@@ -866,24 +866,14 @@
       const hasFrame = !!selectedFrame;
       $generateBtn.disabled = !(hasFrame && hasLocales);
 
-      if (translationResults) {
-        // Switch to "Apply" button set
-        $footer.innerHTML = `
-      <button class="btn-primary" id="applyBtn">Apply to Canvas</button>
-      <button class="btn-secondary" id="resetBtn">Start Over</button>
-    `;
-        document.getElementById("applyBtn").addEventListener("click", applyTranslations);
-        document.getElementById("resetBtn").addEventListener("click", resetResults);
-      } else {
-        $footer.innerHTML = '';
-        const btn = document.createElement("button");
-        btn.className = "btn-primary";
-        btn.id = "generateBtn";
-        btn.disabled = !(hasFrame && hasLocales);
-        btn.textContent = "Generate Translations";
-        btn.addEventListener("click", startGeneration);
-        $footer.appendChild(btn);
-      }
+      $footer.innerHTML = '';
+      const btn = document.createElement("button");
+      btn.className = "btn-primary";
+      btn.id = "generateBtn";
+      btn.disabled = !(hasFrame && hasLocales);
+      btn.textContent = "Generate Translations";
+      btn.addEventListener("click", startGeneration);
+      $footer.appendChild(btn);
     }
 
     function renderResults() {
@@ -1001,8 +991,8 @@
       translationResults = null;
       renderView();
 
+      let appliedCount = 0;
       try {
-        const results = [];
         for (let i = 0; i < selectedLocales.length; i++) {
           const loc = selectedLocales[i];
           const pct = Math.round(((i) / selectedLocales.length) * 100);
@@ -1015,26 +1005,28 @@
             loc.meta
           );
 
-          results.push({
-            locale: loc.meta.label,
-            localeCode: loc.code,
-            localeMeta: loc.meta,
-            layers: translated,
-          });
+          // Apply this locale to canvas immediately
+          applyOneLocale(loc.meta.label, translated);
+          appliedCount++;
+          $genStatus.textContent = loc.meta.flag + " " + loc.meta.label + " applied!";
         }
 
         $genProgress.style.width = "100%";
-        $genStatus.textContent = "Done!";
-        translationResults = results;
+        $genStatus.textContent = "Done — " + appliedCount + " locale(s) applied!";
 
-        await new Promise(r => setTimeout(r, 500));
+        await new Promise(r => setTimeout(r, 800));
         isGenerating = false;
         renderView();
+        showToast(appliedCount + " localised frame(s) created on canvas!", "success");
 
       } catch (err) {
         isGenerating = false;
         renderView();
-        showToast("Translation failed: " + (err.message || err));
+        if (appliedCount > 0) {
+          showToast("Applied " + appliedCount + " locale(s) but failed on the rest: " + (err.message || err));
+        } else {
+          showToast("Translation failed: " + (err.message || err));
+        }
       }
     }
 
@@ -1135,30 +1127,20 @@ Return a JSON array (same order) with objects: { "id": "<layer id>", "translated
     // APPLY TRANSLATIONS TO CANVAS
     // ==================================================================
 
-    function applyTranslations() {
-      if (!translationResults || !selectedFrame) return;
-
-      const payload = translationResults.map(res => ({
-        locale: res.locale,
-        layers: res.layers.map(l => ({ id: l.id, translated: l.translated })),
-      }));
+    /** Apply a single locale's translations to canvas immediately. */
+    function applyOneLocale(localeLabel, layers) {
+      if (!selectedFrame) return;
 
       parent.postMessage({
         pluginMessage: {
           type: "apply-translations",
           sourceFrameId: selectedFrame.id,
-          translations: payload,
+          translations: [{
+            locale: localeLabel,
+            layers: layers.map(l => ({ id: l.id, translated: l.translated })),
+          }],
         }
-      }, "*"); // Figma requires "*" — plugin iframe is sandboxed with null origin
-
-      showToast("Applying translations to canvas…", "success");
-    }
-
-    function resetResults() {
-      translationResults = null;
-      $resultsSection.classList.add("hidden");
-      $resultsSection.innerHTML = "";
-      renderView();
+      }, "*");
     }
 
     // ==================================================================
