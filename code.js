@@ -94,6 +94,14 @@ figma.ui.onmessage = async (msg) => {
     // --- Apply translations to duplicated frames ---
     if (msg.type === "apply-translations") {
         const { sourceFrameId, translations } = msg;
+        // RTL locale prefixes — languages that read right-to-left
+        const RTL_CODES = ["ar", "he", "fa", "ur", "ps", "yi", "sd", "ku"];
+        function isRtlLocale(code) {
+            if (!code)
+                return false;
+            const base = code.split("-")[0].toLowerCase();
+            return RTL_CODES.includes(base);
+        }
         // --- Input validation ---
         if (typeof sourceFrameId !== "string" || !Array.isArray(translations)) {
             figma.notify("Invalid translation payload.", { error: true });
@@ -142,6 +150,7 @@ figma.ui.onmessage = async (msg) => {
             clone.x = source.x + offsetX;
             clone.y = source.y;
             offsetX += clone.width + GAP;
+            const rtl = isRtlLocale(t.localeCode || "");
             // Walk text layers in the clone and apply translated text
             const cloneTextNodes = collectTextNodes(clone);
             const sourceTextNodes = collectTextNodes(source);
@@ -167,6 +176,17 @@ figma.ui.onmessage = async (msg) => {
                         await figma.loadFontAsync(font);
                     }
                     cloneText.characters = newText;
+                    // Flip horizontal text alignment for RTL locales
+                    if (rtl) {
+                        const align = cloneText.textAlignHorizontal;
+                        if (align === "LEFT") {
+                            cloneText.textAlignHorizontal = "RIGHT";
+                        }
+                        else if (align === "RIGHT") {
+                            cloneText.textAlignHorizontal = "LEFT";
+                        }
+                        // CENTER and JUSTIFIED stay as-is
+                    }
                 }
                 catch (err) {
                     // If a specific font can't be loaded, skip this layer but continue

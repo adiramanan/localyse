@@ -1182,7 +1182,7 @@
           );
 
           // Apply this locale to canvas immediately
-          applyOneLocale(loc.meta.label, translated);
+          applyOneLocale(loc.meta.label, loc.code, translated);
           appliedCount++;
           $genStatus.textContent = loc.meta.flag + " " + loc.meta.label + " applied!";
         }
@@ -1272,7 +1272,7 @@
     // ==================================================================
 
     /** Apply a single locale's translations to canvas immediately. */
-    function applyOneLocale(localeLabel, layers) {
+    function applyOneLocale(localeLabel, localeCode, layers) {
       if (!selectedFrame) return;
 
       parent.postMessage({
@@ -1281,6 +1281,7 @@
           sourceFrameId: selectedFrame.id,
           translations: [{
             locale: localeLabel,
+            localeCode: localeCode,
             layers: layers.map(l => ({ id: l.id, translated: l.translated })),
           }],
         }
