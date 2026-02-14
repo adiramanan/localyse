@@ -27,6 +27,70 @@ function collectTextNodes(node: SceneNode): TextNode[] {
   return results;
 }
 
+/**
+ * Recursively mirror a frame tree for RTL layout.
+ * This handles:
+ *  - Horizontal auto-layout: reverse children order
+ *  - Auto-layout frames: swap paddingLeft ↔ paddingRight
+ *  - Text nodes: flip LEFT ↔ RIGHT alignment
+ *  - All frames: swap border radius (topLeft↔topRight, bottomLeft↔bottomRight)
+ *
+ * Note: Non-auto-layout frames are NOT position-mirrored because manually
+ * positioned children have complex constraints that can't be reliably flipped.
+ */
+function mirrorForRtl(node: SceneNode): void {
+  // --- Text node: flip horizontal alignment ---
+  if (node.type === "TEXT") {
+    const align = node.textAlignHorizontal;
+    if (align === "LEFT") {
+      node.textAlignHorizontal = "RIGHT";
+    } else if (align === "RIGHT") {
+      node.textAlignHorizontal = "LEFT";
+    }
+    return;
+  }
+
+  // --- Frame / Component / Instance with children ---
+  if (!("children" in node)) return;
+
+  const frame = node as FrameNode;
+  const isAutoLayout = "layoutMode" in frame && (frame.layoutMode === "HORIZONTAL" || frame.layoutMode === "VERTICAL");
+
+  if (isAutoLayout) {
+    // Swap left/right padding
+    const tmpPadding = frame.paddingLeft;
+    frame.paddingLeft = frame.paddingRight;
+    frame.paddingRight = tmpPadding;
+
+    // Reverse children order in horizontal auto-layout
+    if (frame.layoutMode === "HORIZONTAL") {
+      // Snapshot children references first, then re-insert at position 0
+      // Each insertChild(0, child) pushes previous children right
+      const children = [...frame.children];
+      for (const child of children) {
+        frame.insertChild(0, child);
+      }
+    }
+  }
+
+  // Swap border radius left ↔ right (if applicable)
+  if ("topLeftRadius" in frame) {
+    const tlr = frame.topLeftRadius;
+    const trr = frame.topRightRadius;
+    const blr = frame.bottomLeftRadius;
+    const brr = frame.bottomRightRadius;
+    frame.topLeftRadius = trr;
+    frame.topRightRadius = tlr;
+    frame.bottomLeftRadius = brr;
+    frame.bottomRightRadius = blr;
+  }
+
+  // Recurse into children
+  for (const child of frame.children) {
+    mirrorForRtl(child as SceneNode);
+  }
+}
+
 /** Build a serialisable description of every text layer in a frame. */
 function extractTextLayers(frame: SceneNode) {
   const textNodes = collectTextNodes(frame);
@@ -205,23 +269,17 @@ figma.ui.onmessage = async (msg) => {
             await figma.loadFontAsync(font);
           }
           cloneText.characters = newText;
-
-          // Flip horizontal text alignment for RTL locales
-          if (rtl) {
-            const align = cloneText.textAlignHorizontal;
-            if (align === "LEFT") {
-              cloneText.textAlignHorizontal = "RIGHT";
-            } else if (align === "RIGHT") {
-              cloneText.textAlignHorizontal = "LEFT";
-            }
-            // CENTER and JUSTIFIED stay as-is
-          }
         } catch (err) {
           // If a specific font can't be loaded, skip this layer but continue
           console.error(
             `[Localyse] Could not set text for "${cloneText.name}": ${err}`
           );
         }
+      }
+
+      // Full RTL layout mirroring — applied after all text is set
+      if (rtl) {
+        mirrorForRtl(clone);
       }
     }
 

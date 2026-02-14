@@ -1220,6 +1220,8 @@
           text: l.characters,
         })),
         targetLocale: localeMeta.azureCode || localeCode,
+        localeLabel: localeMeta.label || "",
+        localeCurrencies: localeMeta.currencies || [],
       };
 
       const response = await fetch(WORKER_URL, {

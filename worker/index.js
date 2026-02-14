@@ -1,7 +1,8 @@
 /**
  * Localyse — Cloudflare Worker Proxy
  *
- * Translates text layers via Azure Translator API with smart context formatting.
+ * Translates text layers via Azure Translator API with smart context formatting,
+ * then optionally refines via GPT-4o-mini for contextual accuracy.
  * Includes per-user rate limiting (25 requests/day) via Cloudflare KV.
  * Also serves the privacy policy at GET /privacy.
  *
@@ -11,6 +12,7 @@
  *   npx wrangler deploy
  *   npx wrangler secret put AZURE_TRANSLATOR_KEY
  *   npx wrangler secret put AZURE_TRANSLATOR_REGION
+ *   npx wrangler secret put OPENAI_API_KEY   # optional — enables LLM refinement
  */
 
 const CORS_HEADERS = {
@@ -185,6 +187,112 @@ async function translateWithAzure(env, textLayers, targetLocale) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
+// LLM contextual refinement (GPT-4o-mini)
+// ──────────────────────────────────────────────────────────────────────
+
+const OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions";
+
+/**
+ * Post-process Azure translations through GPT-4o-mini for contextual
+ * refinement: currency conversion, date formatting, proper names,
+ * and natural-sounding localised text.
+ *
+ * If OPENAI_API_KEY is not set, this gracefully returns the
+ * original Azure translations unchanged.
+ */
+async function refineWithLLM(env, textLayers, azureResults, targetLocale, localeLabel, localeCurrencies) {
+    // Skip if no OpenAI key configured — Azure results are used as-is
+    if (!env.OPENAI_API_KEY) return azureResults;
+
+    // Build a compact prompt with original text + Azure translation
+    const pairs = azureResults.map((r, i) => ({
+        id: r.id,
+        layerName: textLayers[i]?.layerName || "",
+        original: textLayers[i]?.text || "",
+        azureTranslation: r.translated,
+    }));
+
+    const currencyHint = localeCurrencies && localeCurrencies.length > 0
+        ? `The target locale uses these currencies: ${localeCurrencies.join(", ")}.`
+        : "";
+
+    const systemPrompt = `You are a UI localisation expert. You receive text layers from a design tool that have been machine-translated from English to locale "${targetLocale}" (${localeLabel || "unknown"}).
+${currencyHint}
+
+Your job is to REFINE these translations for contextual accuracy:
+1. **Currencies**: Reformat currency values to the target locale's currency symbol and number format. Keep the SAME numeric value — do NOT apply exchange rates. ${currencyHint} For example, $49.99 → 49,99 € for German/EUR, $49.99 → ₹49.99 for Hindi/INR, $1,200.50 → 1.200,50 € for German/EUR. ALWAYS replace $ with the target locale's currency symbol and adjust decimal/thousands separators to match the locale's conventions.
+2. **Dates & numbers**: Adapt date formats (MM/DD → DD/MM where appropriate) and number formatting (decimal separators, thousands separators).
+3. **Abbreviations**: Keep abbreviated text short. If the original is 3 letters, the translation should be similarly concise.
+4. **Tone & naturalness**: Make the text sound natural for a native speaker. Fix awkward machine translations.
+5. **Proper names & brands**: Do NOT translate brand names, product names, or proper nouns.
+6. **UI conventions**: Respect UI conventions for the target locale (e.g. "OK" stays "OK" in most languages).
+
+IMPORTANT: Return ONLY a JSON array with objects { "id": "...", "translated": "..." }. No explanation, no markdown. Preserve the exact same "id" values. If a translation is already good, return it unchanged.`;
+
+    const userPrompt = JSON.stringify(pairs);
+
+    try {
+        const response = await fetch(OPENAI_ENDPOINT, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${env.OPENAI_API_KEY}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                model: "gpt-4o-mini",
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userPrompt },
+                ],
+                temperature: 0.3,
+                max_tokens: 4096,
+            }),
+        });
+
+        if (!response.ok) {
+            // LLM refinement failed — return Azure translations as fallback
+            console.error(`OpenAI refinement error (${response.status})`);
+            return azureResults;
+        }
+
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content?.trim();
+        if (!content) return azureResults;
+
+        // Parse the LLM output
+        let refined;
+        try {
+            // Strip markdown code fences if present
+            const cleaned = content.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
+            refined = JSON.parse(cleaned);
+        } catch {
+            // Parsing failed — return Azure translations as fallback
+            console.error("Failed to parse LLM refinement output");
+            return azureResults;
+        }
+
+        if (!Array.isArray(refined)) return azureResults;
+
+        // Merge LLM refinements back by ID
+        const refinedMap = new Map();
+        for (const r of refined) {
+            if (r.id && typeof r.translated === "string") {
+                refinedMap.set(r.id, r.translated);
+            }
+        }
+
+        return azureResults.map(r => ({
+            id: r.id,
+            translated: refinedMap.get(r.id) || r.translated,
+        }));
+    } catch (err) {
+        // Network or other error — return Azure translations as fallback
+        console.error("LLM refinement failed:", err.message);
+        return azureResults;
+    }
+}
+
+// ──────────────────────────────────────────────────────────────────────
 // Privacy policy
 // ──────────────────────────────────────────────────────────────────────
 
@@ -336,7 +444,7 @@ export default {
         }
 
         try {
-            const { textLayers, targetLocale } = await request.json();
+            const { textLayers, targetLocale, localeLabel, localeCurrencies } = await request.json();
 
             if (!textLayers || !Array.isArray(textLayers) || !targetLocale) {
                 return Response.json(
@@ -345,7 +453,25 @@ export default {
                 );
             }
 
-            const translations = await translateWithAzure(env, textLayers, targetLocale);
+            // For same-language variants (e.g. en-US → en-IN), skip Azure
+            // since it would return the text unchanged. Let the LLM handle
+            // currency, date, and number format adaptation.
+            const isSourceLanguage = targetLocale === "en" || targetLocale.startsWith("en-");
+
+            let azureTranslations;
+            if (isSourceLanguage) {
+                // Pass-through: use original text as the "translation"
+                azureTranslations = textLayers.map(l => ({
+                    id: l.id,
+                    translated: l.text,
+                }));
+            } else {
+                azureTranslations = await translateWithAzure(env, textLayers, targetLocale);
+            }
+
+            // Contextual refinement via LLM (currency, dates, naturalness)
+            // Skipped gracefully if OPENAI_API_KEY is not configured
+            const translations = await refineWithLLM(env, textLayers, azureTranslations, targetLocale, localeLabel, localeCurrencies);
 
             return Response.json(translations, {
                 status: 200,
