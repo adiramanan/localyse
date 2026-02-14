@@ -89,6 +89,70 @@
     }
 
     /* ------------------------------------------------------------------ */
+    /*  SUCCESS STATE                                                     */
+    /* ------------------------------------------------------------------ */
+    .success-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      padding: 40px 24px;
+      text-align: center;
+      animation: fadeIn .3s ease both;
+    }
+
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+    }
+
+    .success-icon svg {
+      width: 32px;
+      height: 32px;
+      color: #fff;
+    }
+
+    .success-state h2 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .success-state p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .success-locales {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      margin-top: 14px;
+    }
+
+    .success-locale-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 10px;
+      border-radius: 20px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    /* ------------------------------------------------------------------ */
     /*  HEADER                                                            */
     /* ------------------------------------------------------------------ */
     .header {
@@ -627,6 +691,19 @@
         <div class="progress-bar-fill" id="genProgress" style="width:0%"></div>
       </div>
     </div>
+
+    <!-- SUCCESS STATE -->
+    <div id="successState" class="success-state hidden">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+          stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      </div>
+      <h2 id="successTitle">Translations applied!</h2>
+      <p id="successSubtitle">Your localised frames have been created on the canvas.</p>
+      <div class="success-locales" id="successLocales"></div>
+    </div>
   </div>
 
   <!-- ================================================================ -->
@@ -696,6 +773,8 @@
     let selectedFrame = null;   // { id, name, width, height, imageBytes, textLayers }
     let localeRows = [];        // array of { uid, code }
     let isGenerating = false;
+    let isSuccess = false;
+    let successInfo = null;     // { count, locales: [{flag, label}] }
     let translationResults = null; // array of { locale, localeMeta, layers:[{id,original,translated}] }
 
     // ==================================================================
@@ -704,6 +783,7 @@
     const $emptyState = document.getElementById("emptyState");
     const $mainContent = document.getElementById("mainContent");
     const $generatingState = document.getElementById("generatingState");
+    const $successState = document.getElementById("successState");
     const $frameImage = document.getElementById("frameImage");
     const $frameName = document.getElementById("frameName");
     const $frameDim = document.getElementById("frameDim");
@@ -736,27 +816,53 @@
     // ==================================================================
 
     function renderView() {
+      // Hide all states first
+      $emptyState.classList.add("hidden");
+      $mainContent.classList.add("hidden");
+      $generatingState.classList.add("hidden");
+      $generatingState.style.display = "none";
+      $successState.classList.add("hidden");
+      $footer.classList.remove("hidden");
+
+      if (isSuccess && successInfo) {
+        $successState.classList.remove("hidden");
+        $stepIndicator.textContent = "Complete";
+        document.getElementById("successTitle").textContent =
+          successInfo.count + " locale" + (successInfo.count > 1 ? "s" : "") + " applied!";
+        document.getElementById("successSubtitle").textContent =
+          "Your localised frames have been created on the canvas.";
+        const $locales = document.getElementById("successLocales");
+        $locales.innerHTML = "";
+        successInfo.locales.forEach(loc => {
+          const tag = document.createElement("span");
+          tag.className = "success-locale-tag";
+          tag.textContent = loc.flag + " " + loc.label;
+          $locales.appendChild(tag);
+        });
+        // Show "Translate Another" button
+        $footer.innerHTML = '';
+        const btn = document.createElement("button");
+        btn.className = "btn-primary";
+        btn.textContent = "Translate Another";
+        btn.addEventListener("click", startOver);
+        $footer.appendChild(btn);
+        return;
+      }
+
       if (isGenerating) {
-        $emptyState.classList.add("hidden");
-        $mainContent.classList.add("hidden");
         $generatingState.classList.remove("hidden");
         $generatingState.style.display = "flex";
         $footer.classList.add("hidden");
         return;
       }
-      $generatingState.classList.add("hidden");
-      $generatingState.style.display = "none";
-      $footer.classList.remove("hidden");
 
       if (!selectedFrame) {
         $emptyState.classList.remove("hidden");
-        $mainContent.classList.add("hidden");
         $generateBtn.disabled = true;
         $stepIndicator.textContent = "Select a frame";
         return;
       }
 
-      $emptyState.classList.add("hidden");
       $mainContent.classList.remove("hidden");
       $stepIndicator.textContent = "Configure locales";
 
@@ -1014,10 +1120,14 @@
         $genProgress.style.width = "100%";
         $genStatus.textContent = "Done — " + appliedCount + " locale(s) applied!";
 
-        await new Promise(r => setTimeout(r, 800));
+        await new Promise(r => setTimeout(r, 400));
         isGenerating = false;
+        isSuccess = true;
+        successInfo = {
+          count: appliedCount,
+          locales: selectedLocales.map(loc => ({ flag: loc.meta.flag, label: loc.meta.label })),
+        };
         renderView();
-        showToast(appliedCount + " localised frame(s) created on canvas!", "success");
 
       } catch (err) {
         isGenerating = false;
@@ -1141,6 +1251,13 @@ Return a JSON array (same order) with objects: { "id": "<layer id>", "translated
           }],
         }
       }, "*");
+    }
+
+    function startOver() {
+      isSuccess = false;
+      successInfo = null;
+      translationResults = null;
+      renderView();
     }
 
     // ==================================================================
