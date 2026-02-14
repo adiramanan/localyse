@@ -1,801 +1,1054 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src blob: data:; connect-src https://api.openai.com;" />
-<style>
-/* ------------------------------------------------------------------ */
-/*  RESET & BASE                                                      */
-/* ------------------------------------------------------------------ */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src blob: data:; connect-src https://localyse-proxy.adiramanan98.workers.dev;" />
+  <style>
+    /* ------------------------------------------------------------------ */
+    /*  RESET & BASE                                                      */
+    /* ------------------------------------------------------------------ */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-:root {
-  --bg: #ffffff;
-  --bg-secondary: #f5f5f5;
-  --bg-tertiary: #ebebeb;
-  --text-primary: #1e1e1e;
-  --text-secondary: #6b6b6b;
-  --text-tertiary: #999999;
-  --border: #e0e0e0;
-  --accent: #5b5bf6;
-  --accent-hover: #4a4ae0;
-  --accent-light: #ededff;
-  --danger: #e74c3c;
-  --success: #27ae60;
-  --radius: 8px;
-  --radius-lg: 12px;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
-  --shadow-md: 0 4px 12px rgba(0,0,0,.1);
-  --transition: 180ms ease;
-}
+    :root {
+      --bg: #ffffff;
+      --bg-secondary: #f5f5f5;
+      --bg-tertiary: #ebebeb;
+      --text-primary: #1e1e1e;
+      --text-secondary: #6b6b6b;
+      --text-tertiary: #999999;
+      --border: #e0e0e0;
+      --accent: #5b5bf6;
+      --accent-hover: #4a4ae0;
+      --accent-light: #ededff;
+      --danger: #e74c3c;
+      --success: #27ae60;
+      --radius: 8px;
+      --radius-lg: 12px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, .08);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, .1);
+      --transition: 180ms ease;
+    }
 
-/* Figma dark theme overrides */
-.figma-dark {
-  --bg: #2c2c2c;
-  --bg-secondary: #383838;
-  --bg-tertiary: #444444;
-  --text-primary: #e5e5e5;
-  --text-secondary: #a0a0a0;
-  --text-tertiary: #777777;
-  --border: #4a4a4a;
-  --accent-light: #3a3a6e;
-}
+    /* Figma dark theme overrides */
+    .figma-dark {
+      --bg: #2c2c2c;
+      --bg-secondary: #383838;
+      --bg-tertiary: #444444;
+      --text-primary: #e5e5e5;
+      --text-secondary: #a0a0a0;
+      --text-tertiary: #777777;
+      --border: #4a4a4a;
+      --accent-light: #3a3a6e;
+    }
 
-html, body {
-  height: 100%;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--text-primary);
-  background: var(--bg);
-  overflow-x: hidden;
-}
+    html,
+    body {
+      height: 100%;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text-primary);
+      background: var(--bg);
+      overflow-x: hidden;
+    }
 
-body { display: flex; flex-direction: column; }
+    body {
+      display: flex;
+      flex-direction: column;
+    }
 
-/* ------------------------------------------------------------------ */
-/*  UTILITIES                                                         */
-/* ------------------------------------------------------------------ */
-.hidden { display: none !important; }
-.fade-in { animation: fadeIn .25s ease both; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    /* ------------------------------------------------------------------ */
+    /*  UTILITIES                                                         */
+    /* ------------------------------------------------------------------ */
+    .hidden {
+      display: none !important;
+    }
 
-/* ------------------------------------------------------------------ */
-/*  HEADER                                                            */
-/* ------------------------------------------------------------------ */
-.header {
-  display: flex; align-items: center; gap: 8px;
-  padding: 14px 16px 10px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.header-logo {
-  width: 24px; height: 24px; border-radius: 6px;
-  background: var(--accent); color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 13px;
-}
-.header-title { font-weight: 700; font-size: 14px; }
-.header-subtitle { font-size: 11px; color: var(--text-secondary); margin-left: auto; }
+    .fade-in {
+      animation: fadeIn .25s ease both;
+    }
 
-/* ------------------------------------------------------------------ */
-/*  SCROLLABLE BODY                                                   */
-/* ------------------------------------------------------------------ */
-.body {
-  flex: 1; overflow-y: auto; padding: 16px;
-  display: flex; flex-direction: column; gap: 16px;
-}
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
 
-/* ------------------------------------------------------------------ */
-/*  EMPTY STATE                                                       */
-/* ------------------------------------------------------------------ */
-.empty-state {
-  flex: 1; display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  text-align: center; gap: 12px; padding: 40px 24px;
-}
-.empty-icon {
-  width: 64px; height: 64px; border-radius: 50%;
-  background: var(--bg-secondary); display: flex;
-  align-items: center; justify-content: center;
-}
-.empty-icon svg { width: 28px; height: 28px; color: var(--text-tertiary); }
-.empty-state h2 { font-size: 15px; font-weight: 600; }
-.empty-state p { font-size: 12px; color: var(--text-secondary); max-width: 260px; }
-
-/* ------------------------------------------------------------------ */
-/*  FRAME PREVIEW CARD                                                */
-/* ------------------------------------------------------------------ */
-.frame-card {
-  border: 1px solid var(--border); border-radius: var(--radius-lg);
-  overflow: hidden; background: var(--bg-secondary);
-}
-.frame-preview {
-  width: 100%; max-height: 220px; object-fit: contain;
-  display: block; background: var(--bg-tertiary);
-}
-.frame-meta {
-  padding: 10px 14px; display: flex; align-items: center;
-  justify-content: space-between; font-size: 12px;
-}
-.frame-meta-name { font-weight: 600; }
-.frame-meta-dim { color: var(--text-secondary); }
-
-/* ------------------------------------------------------------------ */
-/*  SECTION                                                           */
-/* ------------------------------------------------------------------ */
-.section-label {
-  font-size: 11px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .6px; color: var(--text-secondary); margin-bottom: 4px;
-}
-
-/* ------------------------------------------------------------------ */
-/*  LOCALE ROWS                                                       */
-/* ------------------------------------------------------------------ */
-.locale-list { display: flex; flex-direction: column; gap: 8px; }
-
-.locale-row {
-  display: flex; gap: 8px; align-items: flex-start;
-  animation: fadeIn .2s ease both;
-}
-.locale-row .locale-select-wrap { flex: 1; }
-
-.locale-select {
-  width: 100%; padding: 8px 10px; font-size: 13px;
-  border: 1px solid var(--border); border-radius: var(--radius);
-  background: var(--bg); color: var(--text-primary);
-  cursor: pointer; appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-}
-.locale-select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-light); }
-
-.locale-info {
-  font-size: 11px; color: var(--text-secondary);
-  padding: 3px 0 0 2px; line-height: 1.4;
-}
-.locale-info .tag {
-  display: inline-block; background: var(--bg-tertiary);
-  border-radius: 4px; padding: 1px 6px; margin: 2px 2px 0 0;
-  font-size: 10px; white-space: nowrap;
-}
-
-.locale-remove-btn {
-  width: 32px; height: 36px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  border: 1px solid var(--border); border-radius: var(--radius);
-  background: var(--bg); color: var(--text-secondary);
-  cursor: pointer; transition: background var(--transition), color var(--transition);
-}
-.locale-remove-btn:hover { background: #fde8e8; color: var(--danger); }
-
-.add-locale-btn {
-  display: inline-flex; align-items: center; gap: 4px;
-  border: 1px dashed var(--border); border-radius: var(--radius);
-  background: transparent; color: var(--accent);
-  padding: 8px 12px; font-size: 12px; font-weight: 500;
-  cursor: pointer; transition: background var(--transition);
-  width: 100%; justify-content: center;
-}
-.add-locale-btn:hover { background: var(--accent-light); }
-.add-locale-btn:disabled { opacity: .4; cursor: not-allowed; }
-.add-locale-btn:disabled:hover { background: transparent; }
-
-/* ------------------------------------------------------------------ */
-/*  BUTTONS                                                           */
-/* ------------------------------------------------------------------ */
-.btn-primary {
-  width: 100%; padding: 11px 16px; font-size: 14px; font-weight: 600;
-  border: none; border-radius: var(--radius); cursor: pointer;
-  background: var(--accent); color: #fff;
-  transition: background var(--transition), opacity var(--transition);
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-}
-.btn-primary:hover { background: var(--accent-hover); }
-.btn-primary:disabled { opacity: .45; cursor: not-allowed; }
-.btn-primary:disabled:hover { background: var(--accent); }
-
-.btn-secondary {
-  width: 100%; padding: 10px 16px; font-size: 13px; font-weight: 500;
-  border: 1px solid var(--border); border-radius: var(--radius);
-  cursor: pointer; background: var(--bg); color: var(--text-primary);
-  transition: background var(--transition);
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-}
-.btn-secondary:hover { background: var(--bg-secondary); }
-
-/* ------------------------------------------------------------------ */
-/*  PROGRESS / SPINNER                                                */
-/* ------------------------------------------------------------------ */
-.spinner {
-  width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.3);
-  border-top-color: #fff; border-radius: 50%;
-  animation: spin .6s linear infinite; flex-shrink: 0;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.progress-bar-wrap {
-  width: 100%; height: 4px; background: var(--bg-tertiary);
-  border-radius: 2px; overflow: hidden;
-}
-.progress-bar-fill {
-  height: 100%; background: var(--accent);
-  border-radius: 2px; transition: width .3s ease;
-}
-
-.status-text {
-  text-align: center; font-size: 12px; color: var(--text-secondary);
-  padding: 4px 0;
-}
-
-/* ------------------------------------------------------------------ */
-/*  RESULTS                                                           */
-/* ------------------------------------------------------------------ */
-.results-section { display: flex; flex-direction: column; gap: 12px; }
-
-.result-card {
-  border: 1px solid var(--border); border-radius: var(--radius-lg);
-  overflow: hidden; animation: fadeIn .25s ease both;
-}
-.result-header {
-  padding: 10px 14px; background: var(--bg-secondary);
-  font-weight: 600; font-size: 13px;
-  display: flex; align-items: center; gap: 8px;
-  cursor: pointer; user-select: none;
-}
-.result-header .flag { font-size: 16px; }
-.result-header .chevron {
-  margin-left: auto; transition: transform .2s ease; font-size: 11px; color: var(--text-secondary);
-}
-.result-header.open .chevron { transform: rotate(180deg); }
-.result-body { padding: 0; max-height: 0; overflow: hidden; transition: max-height .3s ease, padding .3s ease; }
-.result-body.open { max-height: 1200px; padding: 10px 14px; }
-
-.translation-row {
-  display: flex; gap: 8px; padding: 6px 0;
-  border-bottom: 1px solid var(--bg-tertiary);
-  font-size: 12px;
-}
-.translation-row:last-child { border-bottom: none; }
-.translation-original {
-  flex: 1; color: var(--text-secondary);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.translation-arrow { color: var(--text-tertiary); flex-shrink: 0; }
-.translation-translated { flex: 1; font-weight: 500; }
-
-/* ------------------------------------------------------------------ */
-/*  FOOTER                                                            */
-/* ------------------------------------------------------------------ */
-.footer {
-  padding: 12px 16px; border-top: 1px solid var(--border);
-  flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;
-}
-
-/* ------------------------------------------------------------------ */
-/*  API KEY INPUT                                                     */
-/* ------------------------------------------------------------------ */
-.api-key-section {
-  display: flex; flex-direction: column; gap: 4px;
-}
-.api-key-input {
-  width: 100%; padding: 8px 10px; font-size: 12px;
-  border: 1px solid var(--border); border-radius: var(--radius);
-  background: var(--bg); color: var(--text-primary);
-  font-family: monospace;
-}
-.api-key-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-light); }
-.api-key-hint { font-size: 10px; color: var(--text-tertiary); }
-
-/* ------------------------------------------------------------------ */
-/*  ERROR TOAST                                                       */
-/* ------------------------------------------------------------------ */
-.toast {
-  position: fixed; bottom: 16px; left: 16px; right: 16px;
-  padding: 10px 14px; border-radius: var(--radius);
-  font-size: 12px; font-weight: 500; z-index: 1000;
-  animation: fadeIn .2s ease both;
-}
-.toast.error { background: #fde8e8; color: var(--danger); border: 1px solid #f5c6c6; }
-.toast.success { background: #e8f8ef; color: var(--success); border: 1px solid #b8e6cc; }
-</style>
-</head>
-<body>
-
-<!-- ================================================================ -->
-<!--  HEADER                                                          -->
-<!-- ================================================================ -->
-<div class="header">
-  <div class="header-logo">L</div>
-  <span class="header-title">Localyse</span>
-  <span class="header-subtitle" id="stepIndicator">Select a frame</span>
-</div>
-
-<!-- ================================================================ -->
-<!--  BODY                                                            -->
-<!-- ================================================================ -->
-<div class="body" id="bodyContainer">
-
-  <!-- EMPTY STATE -->
-  <div id="emptyState" class="empty-state">
-    <div class="empty-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="3"/>
-        <path d="M3 9h18M9 3v18"/>
-      </svg>
-    </div>
-    <h2>No frame selected</h2>
-    <p>Select a frame, component, or instance on the canvas to get started.</p>
-  </div>
-
-  <!-- MAIN CONTENT (hidden until frame selected) -->
-  <div id="mainContent" class="hidden fade-in">
-
-    <!-- Frame preview -->
-    <div class="frame-card">
-      <img id="frameImage" class="frame-preview" alt="Frame preview" />
-      <div class="frame-meta">
-        <span class="frame-meta-name" id="frameName"></span>
-        <span class="frame-meta-dim" id="frameDim"></span>
-      </div>
-    </div>
-
-    <!-- API Key -->
-    <div class="api-key-section">
-      <label class="section-label">OpenAI API Key</label>
-      <input type="password" class="api-key-input" id="apiKeyInput" placeholder="sk-..." />
-      <span class="api-key-hint">Your key is used only in-browser and never stored on any server.</span>
-    </div>
-
-    <!-- Locales -->
-    <div>
-      <div class="section-label">Target Locales (up to 5)</div>
-      <div class="locale-list" id="localeList"></div>
-      <button class="add-locale-btn" id="addLocaleBtn" style="margin-top:8px;">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="6" y1="1" x2="6" y2="11"/><line x1="1" y1="6" x2="11" y2="6"/></svg>
-        Add locale
-      </button>
-    </div>
-
-    <!-- Results (hidden until generation) -->
-    <div id="resultsSection" class="results-section hidden"></div>
-  </div>
-
-  <!-- GENERATING STATE -->
-  <div id="generatingState" class="hidden" style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:40px 20px;">
-    <div class="spinner" style="border-color:var(--accent-light);border-top-color:var(--accent);width:28px;height:28px;border-width:3px;"></div>
-    <div class="status-text" id="genStatus">Translating…</div>
-    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="genProgress" style="width:0%"></div></div>
-  </div>
-</div>
-
-<!-- ================================================================ -->
-<!--  FOOTER                                                          -->
-<!-- ================================================================ -->
-<div class="footer" id="footer">
-  <button class="btn-primary" id="generateBtn" disabled>
-    Generate Translations
-  </button>
-</div>
-
-<!-- ================================================================ -->
-<!--  SCRIPT                                                          -->
-<!-- ================================================================ -->
-<script>
-// ==================================================================
-// LOCALE DATA
-// ==================================================================
-const LOCALES = [
-  { code:"ar-SA", label:"Arabic (Saudi Arabia)", flag:"🇸🇦", languages:["Arabic"], currencies:["SAR"] },
-  { code:"bn-BD", label:"Bengali (Bangladesh)", flag:"🇧🇩", languages:["Bengali"], currencies:["BDT"] },
-  { code:"zh-CN", label:"Chinese Simplified (China)", flag:"🇨🇳", languages:["Chinese (Simplified)"], currencies:["CNY"] },
-  { code:"zh-TW", label:"Chinese Traditional (Taiwan)", flag:"🇹🇼", languages:["Chinese (Traditional)"], currencies:["TWD"] },
-  { code:"cs-CZ", label:"Czech (Czechia)", flag:"🇨🇿", languages:["Czech"], currencies:["CZK"] },
-  { code:"da-DK", label:"Danish (Denmark)", flag:"🇩🇰", languages:["Danish"], currencies:["DKK"] },
-  { code:"nl-NL", label:"Dutch (Netherlands)", flag:"🇳🇱", languages:["Dutch"], currencies:["EUR"] },
-  { code:"en-AU", label:"English (Australia)", flag:"🇦🇺", languages:["English"], currencies:["AUD"] },
-  { code:"en-CA", label:"English (Canada)", flag:"🇨🇦", languages:["English","French"], currencies:["CAD"] },
-  { code:"en-GB", label:"English (United Kingdom)", flag:"🇬🇧", languages:["English"], currencies:["GBP"] },
-  { code:"en-IN", label:"English (India)", flag:"🇮🇳", languages:["English","Hindi"], currencies:["INR"] },
-  { code:"en-US", label:"English (United States)", flag:"🇺🇸", languages:["English"], currencies:["USD"] },
-  { code:"fi-FI", label:"Finnish (Finland)", flag:"🇫🇮", languages:["Finnish","Swedish"], currencies:["EUR"] },
-  { code:"fr-CA", label:"French (Canada)", flag:"🇨🇦", languages:["French","English"], currencies:["CAD"] },
-  { code:"fr-FR", label:"French (France)", flag:"🇫🇷", languages:["French"], currencies:["EUR"] },
-  { code:"de-AT", label:"German (Austria)", flag:"🇦🇹", languages:["German"], currencies:["EUR"] },
-  { code:"de-CH", label:"German (Switzerland)", flag:"🇨🇭", languages:["German","French","Italian","Romansh"], currencies:["CHF"] },
-  { code:"de-DE", label:"German (Germany)", flag:"🇩🇪", languages:["German"], currencies:["EUR"] },
-  { code:"el-GR", label:"Greek (Greece)", flag:"🇬🇷", languages:["Greek"], currencies:["EUR"] },
-  { code:"he-IL", label:"Hebrew (Israel)", flag:"🇮🇱", languages:["Hebrew"], currencies:["ILS"] },
-  { code:"hi-IN", label:"Hindi (India)", flag:"🇮🇳", languages:["Hindi","English"], currencies:["INR"] },
-  { code:"hu-HU", label:"Hungarian (Hungary)", flag:"🇭🇺", languages:["Hungarian"], currencies:["HUF"] },
-  { code:"id-ID", label:"Indonesian (Indonesia)", flag:"🇮🇩", languages:["Indonesian"], currencies:["IDR"] },
-  { code:"it-IT", label:"Italian (Italy)", flag:"🇮🇹", languages:["Italian"], currencies:["EUR"] },
-  { code:"ja-JP", label:"Japanese (Japan)", flag:"🇯🇵", languages:["Japanese"], currencies:["JPY"] },
-  { code:"ko-KR", label:"Korean (South Korea)", flag:"🇰🇷", languages:["Korean"], currencies:["KRW"] },
-  { code:"ms-MY", label:"Malay (Malaysia)", flag:"🇲🇾", languages:["Malay","English"], currencies:["MYR"] },
-  { code:"nb-NO", label:"Norwegian Bokmål (Norway)", flag:"🇳🇴", languages:["Norwegian Bokmål","Norwegian Nynorsk"], currencies:["NOK"] },
-  { code:"pl-PL", label:"Polish (Poland)", flag:"🇵🇱", languages:["Polish"], currencies:["PLN"] },
-  { code:"pt-BR", label:"Portuguese (Brazil)", flag:"🇧🇷", languages:["Portuguese"], currencies:["BRL"] },
-  { code:"pt-PT", label:"Portuguese (Portugal)", flag:"🇵🇹", languages:["Portuguese"], currencies:["EUR"] },
-  { code:"ro-RO", label:"Romanian (Romania)", flag:"🇷🇴", languages:["Romanian"], currencies:["RON"] },
-  { code:"ru-RU", label:"Russian (Russia)", flag:"🇷🇺", languages:["Russian"], currencies:["RUB"] },
-  { code:"es-AR", label:"Spanish (Argentina)", flag:"🇦🇷", languages:["Spanish"], currencies:["ARS"] },
-  { code:"es-ES", label:"Spanish (Spain)", flag:"🇪🇸", languages:["Spanish","Catalan","Galician","Basque"], currencies:["EUR"] },
-  { code:"es-MX", label:"Spanish (Mexico)", flag:"🇲🇽", languages:["Spanish"], currencies:["MXN"] },
-  { code:"sv-SE", label:"Swedish (Sweden)", flag:"🇸🇪", languages:["Swedish"], currencies:["SEK"] },
-  { code:"th-TH", label:"Thai (Thailand)", flag:"🇹🇭", languages:["Thai"], currencies:["THB"] },
-  { code:"tr-TR", label:"Turkish (Turkey)", flag:"🇹🇷", languages:["Turkish"], currencies:["TRY"] },
-  { code:"uk-UA", label:"Ukrainian (Ukraine)", flag:"🇺🇦", languages:["Ukrainian"], currencies:["UAH"] },
-  { code:"vi-VN", label:"Vietnamese (Vietnam)", flag:"🇻🇳", languages:["Vietnamese"], currencies:["VND"] },
-  { code:"zu-ZA", label:"Zulu (South Africa)", flag:"🇿🇦", languages:["Zulu","English","Afrikaans","Xhosa"], currencies:["ZAR"] },
-];
-
-// ==================================================================
-// STATE
-// ==================================================================
-let selectedFrame = null;   // { id, name, width, height, imageBytes, textLayers }
-let localeRows = [];        // array of { uid, code }
-let isGenerating = false;
-let translationResults = null; // array of { locale, localeMeta, layers:[{id,original,translated}] }
-
-// ==================================================================
-// DOM REFS
-// ==================================================================
-const $emptyState      = document.getElementById("emptyState");
-const $mainContent     = document.getElementById("mainContent");
-const $generatingState = document.getElementById("generatingState");
-const $frameImage      = document.getElementById("frameImage");
-const $frameName       = document.getElementById("frameName");
-const $frameDim        = document.getElementById("frameDim");
-const $localeList      = document.getElementById("localeList");
-const $addLocaleBtn    = document.getElementById("addLocaleBtn");
-const $generateBtn     = document.getElementById("generateBtn");
-const $resultsSection  = document.getElementById("resultsSection");
-const $genStatus       = document.getElementById("genStatus");
-const $genProgress     = document.getElementById("genProgress");
-const $stepIndicator   = document.getElementById("stepIndicator");
-const $apiKeyInput     = document.getElementById("apiKeyInput");
-const $footer          = document.getElementById("footer");
-
-// ==================================================================
-// UTILITY
-// ==================================================================
-let uidCounter = 0;
-function uid() { return "lr-" + (++uidCounter); }
-
-function showToast(message, type = "error") {
-  const el = document.createElement("div");
-  el.className = "toast " + type;
-  el.textContent = message;
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), 4000);
-}
-
-// ==================================================================
-// RENDER FUNCTIONS
-// ==================================================================
-
-function renderView() {
-  if (isGenerating) {
-    $emptyState.classList.add("hidden");
-    $mainContent.classList.add("hidden");
-    $generatingState.classList.remove("hidden");
-    $generatingState.style.display = "flex";
-    $footer.classList.add("hidden");
-    return;
-  }
-  $generatingState.classList.add("hidden");
-  $generatingState.style.display = "none";
-  $footer.classList.remove("hidden");
-
-  if (!selectedFrame) {
-    $emptyState.classList.remove("hidden");
-    $mainContent.classList.add("hidden");
-    $generateBtn.disabled = true;
-    $stepIndicator.textContent = "Select a frame";
-    return;
-  }
-
-  $emptyState.classList.add("hidden");
-  $mainContent.classList.remove("hidden");
-  $stepIndicator.textContent = "Configure locales";
-
-  // Frame preview — revoke previous blob URL to prevent memory leak
-  if ($frameImage.src && $frameImage.src.startsWith("blob:")) {
-    URL.revokeObjectURL($frameImage.src);
-  }
-  const blob = new Blob([new Uint8Array(selectedFrame.imageBytes)], { type: "image/png" });
-  $frameImage.src = URL.createObjectURL(blob);
-  $frameName.textContent = selectedFrame.name;
-  $frameDim.textContent = selectedFrame.width + " × " + selectedFrame.height;
-
-  renderLocaleRows();
-  updateGenerateButton();
-
-  // If we have results, show them
-  if (translationResults) {
-    renderResults();
-  }
-}
-
-function renderLocaleRows() {
-  $localeList.innerHTML = "";
-  localeRows.forEach((row, idx) => {
-    const el = document.createElement("div");
-    el.className = "locale-row fade-in";
-
-    const selWrap = document.createElement("div");
-    selWrap.className = "locale-select-wrap";
-
-    const sel = document.createElement("select");
-    sel.className = "locale-select";
-    // Placeholder
-    const placeholder = document.createElement("option");
-    placeholder.value = "";
-    placeholder.textContent = "Choose a locale…";
-    placeholder.disabled = true;
-    if (!row.code) placeholder.selected = true;
-    sel.appendChild(placeholder);
-
-    // Already-chosen codes (to prevent duplicates)
-    const chosen = new Set(localeRows.filter((r, i) => i !== idx && r.code).map(r => r.code));
-
-    LOCALES.forEach(loc => {
-      const opt = document.createElement("option");
-      opt.value = loc.code;
-      opt.textContent = loc.flag + "  " + loc.label;
-      if (chosen.has(loc.code)) opt.disabled = true;
-      if (row.code === loc.code) opt.selected = true;
-      sel.appendChild(opt);
-    });
-
-    sel.addEventListener("change", () => {
-      localeRows[idx].code = sel.value;
-      renderLocaleRows();
-      updateGenerateButton();
-    });
-
-    selWrap.appendChild(sel);
-
-    // Info line — built with safe DOM methods
-    if (row.code) {
-      const meta = LOCALES.find(l => l.code === row.code);
-      if (meta) {
-        const info = document.createElement("div");
-        info.className = "locale-info";
-        meta.languages.forEach(l => {
-          const tag = document.createElement("span");
-          tag.className = "tag";
-          tag.textContent = l;
-          info.appendChild(tag);
-        });
-        meta.currencies.forEach(c => {
-          const tag = document.createElement("span");
-          tag.className = "tag";
-          tag.style.background = "var(--accent-light)";
-          tag.style.color = "var(--accent)";
-          tag.textContent = c;
-          info.appendChild(tag);
-        });
-        selWrap.appendChild(info);
+      to {
+        opacity: 1;
+        transform: none;
       }
     }
 
-    el.appendChild(selWrap);
+    /* ------------------------------------------------------------------ */
+    /*  HEADER                                                            */
+    /* ------------------------------------------------------------------ */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
 
-    // Remove button
-    const rmBtn = document.createElement("button");
-    rmBtn.className = "locale-remove-btn";
-    rmBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg>';
-    rmBtn.title = "Remove locale";
-    rmBtn.addEventListener("click", () => {
-      localeRows.splice(idx, 1);
+    .header-logo {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: var(--accent);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .header-title {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .header-subtitle {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-left: auto;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  SCROLLABLE BODY                                                   */
+    /* ------------------------------------------------------------------ */
+    .body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  EMPTY STATE                                                       */
+    /* ------------------------------------------------------------------ */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 12px;
+      padding: 40px 24px;
+    }
+
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--bg-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .empty-icon svg {
+      width: 28px;
+      height: 28px;
+      color: var(--text-tertiary);
+    }
+
+    .empty-state h2 {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .empty-state p {
+      font-size: 12px;
+      color: var(--text-secondary);
+      max-width: 260px;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  FRAME PREVIEW CARD                                                */
+    /* ------------------------------------------------------------------ */
+    .frame-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      background: var(--bg-secondary);
+    }
+
+    .frame-preview {
+      width: 100%;
+      max-height: 220px;
+      object-fit: contain;
+      display: block;
+      background: var(--bg-tertiary);
+    }
+
+    .frame-meta {
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+
+    .frame-meta-name {
+      font-weight: 600;
+    }
+
+    .frame-meta-dim {
+      color: var(--text-secondary);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  SECTION                                                           */
+    /* ------------------------------------------------------------------ */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  LOCALE ROWS                                                       */
+    /* ------------------------------------------------------------------ */
+    .locale-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .locale-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      animation: fadeIn .2s ease both;
+    }
+
+    .locale-row .locale-select-wrap {
+      flex: 1;
+    }
+
+    .locale-select {
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 13px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--text-primary);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+    }
+
+    .locale-select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-light);
+    }
+
+    .locale-info {
+      font-size: 11px;
+      color: var(--text-secondary);
+      padding: 3px 0 0 2px;
+      line-height: 1.4;
+    }
+
+    .locale-info .tag {
+      display: inline-block;
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+      padding: 1px 6px;
+      margin: 2px 2px 0 0;
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    .locale-remove-btn {
+      width: 32px;
+      height: 36px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    .locale-remove-btn:hover {
+      background: #fde8e8;
+      color: var(--danger);
+    }
+
+    .add-locale-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--accent);
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background var(--transition);
+      width: 100%;
+      justify-content: center;
+    }
+
+    .add-locale-btn:hover {
+      background: var(--accent-light);
+    }
+
+    .add-locale-btn:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+
+    .add-locale-btn:disabled:hover {
+      background: transparent;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  BUTTONS                                                           */
+    /* ------------------------------------------------------------------ */
+    .btn-primary {
+      width: 100%;
+      padding: 11px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      background: var(--accent);
+      color: #fff;
+      transition: background var(--transition), opacity var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-primary:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .btn-primary:disabled:hover {
+      background: var(--accent);
+    }
+
+    .btn-secondary {
+      width: 100%;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      background: var(--bg);
+      color: var(--text-primary);
+      transition: background var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-secondary);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  PROGRESS / SPINNER                                                */
+    /* ------------------------------------------------------------------ */
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, .3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .progress-bar-wrap {
+      width: 100%;
+      height: 4px;
+      background: var(--bg-tertiary);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width .3s ease;
+    }
+
+    .status-text {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-secondary);
+      padding: 4px 0;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  RESULTS                                                           */
+    /* ------------------------------------------------------------------ */
+    .results-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .result-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      animation: fadeIn .25s ease both;
+    }
+
+    .result-header {
+      padding: 10px 14px;
+      background: var(--bg-secondary);
+      font-weight: 600;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .result-header .flag {
+      font-size: 16px;
+    }
+
+    .result-header .chevron {
+      margin-left: auto;
+      transition: transform .2s ease;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .result-header.open .chevron {
+      transform: rotate(180deg);
+    }
+
+    .result-body {
+      padding: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .3s ease, padding .3s ease;
+    }
+
+    .result-body.open {
+      max-height: 1200px;
+      padding: 10px 14px;
+    }
+
+    .translation-row {
+      display: flex;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--bg-tertiary);
+      font-size: 12px;
+    }
+
+    .translation-row:last-child {
+      border-bottom: none;
+    }
+
+    .translation-original {
+      flex: 1;
+      color: var(--text-secondary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .translation-arrow {
+      color: var(--text-tertiary);
+      flex-shrink: 0;
+    }
+
+    .translation-translated {
+      flex: 1;
+      font-weight: 500;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  FOOTER                                                            */
+    /* ------------------------------------------------------------------ */
+    .footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+
+
+    /* ------------------------------------------------------------------ */
+    /*  ERROR TOAST                                                       */
+    /* ------------------------------------------------------------------ */
+    .toast {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      right: 16px;
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      font-size: 12px;
+      font-weight: 500;
+      z-index: 1000;
+      animation: fadeIn .2s ease both;
+    }
+
+    .toast.error {
+      background: #fde8e8;
+      color: var(--danger);
+      border: 1px solid #f5c6c6;
+    }
+
+    .toast.success {
+      background: #e8f8ef;
+      color: var(--success);
+      border: 1px solid #b8e6cc;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ================================================================ -->
+  <!--  HEADER                                                          -->
+  <!-- ================================================================ -->
+  <div class="header">
+    <div class="header-logo">L</div>
+    <span class="header-title">Localyse</span>
+    <span class="header-subtitle" id="stepIndicator">Select a frame</span>
+  </div>
+
+  <!-- ================================================================ -->
+  <!--  BODY                                                            -->
+  <!-- ================================================================ -->
+  <div class="body" id="bodyContainer">
+
+    <!-- EMPTY STATE -->
+    <div id="emptyState" class="empty-state">
+      <div class="empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+          stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="3" />
+          <path d="M3 9h18M9 3v18" />
+        </svg>
+      </div>
+      <h2>No frame selected</h2>
+      <p>Select a frame, component, or instance on the canvas to get started.</p>
+    </div>
+
+    <!-- MAIN CONTENT (hidden until frame selected) -->
+    <div id="mainContent" class="hidden fade-in">
+
+      <!-- Frame preview -->
+      <div class="frame-card">
+        <img id="frameImage" class="frame-preview" alt="Frame preview" />
+        <div class="frame-meta">
+          <span class="frame-meta-name" id="frameName"></span>
+          <span class="frame-meta-dim" id="frameDim"></span>
+        </div>
+      </div>
+
+
+
+      <!-- Locales -->
+      <div>
+        <div class="section-label">Target Locales (up to 5)</div>
+        <div class="locale-list" id="localeList"></div>
+        <button class="add-locale-btn" id="addLocaleBtn" style="margin-top:8px;">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"
+            stroke-linecap="round">
+            <line x1="6" y1="1" x2="6" y2="11" />
+            <line x1="1" y1="6" x2="11" y2="6" />
+          </svg>
+          Add locale
+        </button>
+      </div>
+
+      <!-- Results (hidden until generation) -->
+      <div id="resultsSection" class="results-section hidden"></div>
+    </div>
+
+    <!-- GENERATING STATE -->
+    <div id="generatingState" class="hidden"
+      style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:40px 20px;">
+      <div class="spinner"
+        style="border-color:var(--accent-light);border-top-color:var(--accent);width:28px;height:28px;border-width:3px;">
+      </div>
+      <div class="status-text" id="genStatus">Translating…</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="genProgress" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
+  <!--  FOOTER                                                          -->
+  <!-- ================================================================ -->
+  <div class="footer" id="footer">
+    <button class="btn-primary" id="generateBtn" disabled>
+      Generate Translations
+    </button>
+  </div>
+
+  <!-- ================================================================ -->
+  <!--  SCRIPT                                                          -->
+  <!-- ================================================================ -->
+  <script>
+    // ==================================================================
+    // LOCALE DATA
+    // ==================================================================
+    const LOCALES = [
+      { code: "ar-SA", label: "Arabic (Saudi Arabia)", flag: "🇸🇦", languages: ["Arabic"], currencies: ["SAR"] },
+      { code: "bn-BD", label: "Bengali (Bangladesh)", flag: "🇧🇩", languages: ["Bengali"], currencies: ["BDT"] },
+      { code: "zh-CN", label: "Chinese Simplified (China)", flag: "🇨🇳", languages: ["Chinese (Simplified)"], currencies: ["CNY"] },
+      { code: "zh-TW", label: "Chinese Traditional (Taiwan)", flag: "🇹🇼", languages: ["Chinese (Traditional)"], currencies: ["TWD"] },
+      { code: "cs-CZ", label: "Czech (Czechia)", flag: "🇨🇿", languages: ["Czech"], currencies: ["CZK"] },
+      { code: "da-DK", label: "Danish (Denmark)", flag: "🇩🇰", languages: ["Danish"], currencies: ["DKK"] },
+      { code: "nl-NL", label: "Dutch (Netherlands)", flag: "🇳🇱", languages: ["Dutch"], currencies: ["EUR"] },
+      { code: "en-AU", label: "English (Australia)", flag: "🇦🇺", languages: ["English"], currencies: ["AUD"] },
+      { code: "en-CA", label: "English (Canada)", flag: "🇨🇦", languages: ["English", "French"], currencies: ["CAD"] },
+      { code: "en-GB", label: "English (United Kingdom)", flag: "🇬🇧", languages: ["English"], currencies: ["GBP"] },
+      { code: "en-IN", label: "English (India)", flag: "🇮🇳", languages: ["English", "Hindi"], currencies: ["INR"] },
+      { code: "en-US", label: "English (United States)", flag: "🇺🇸", languages: ["English"], currencies: ["USD"] },
+      { code: "fi-FI", label: "Finnish (Finland)", flag: "🇫🇮", languages: ["Finnish", "Swedish"], currencies: ["EUR"] },
+      { code: "fr-CA", label: "French (Canada)", flag: "🇨🇦", languages: ["French", "English"], currencies: ["CAD"] },
+      { code: "fr-FR", label: "French (France)", flag: "🇫🇷", languages: ["French"], currencies: ["EUR"] },
+      { code: "de-AT", label: "German (Austria)", flag: "🇦🇹", languages: ["German"], currencies: ["EUR"] },
+      { code: "de-CH", label: "German (Switzerland)", flag: "🇨🇭", languages: ["German", "French", "Italian", "Romansh"], currencies: ["CHF"] },
+      { code: "de-DE", label: "German (Germany)", flag: "🇩🇪", languages: ["German"], currencies: ["EUR"] },
+      { code: "el-GR", label: "Greek (Greece)", flag: "🇬🇷", languages: ["Greek"], currencies: ["EUR"] },
+      { code: "he-IL", label: "Hebrew (Israel)", flag: "🇮🇱", languages: ["Hebrew"], currencies: ["ILS"] },
+      { code: "hi-IN", label: "Hindi (India)", flag: "🇮🇳", languages: ["Hindi", "English"], currencies: ["INR"] },
+      { code: "hu-HU", label: "Hungarian (Hungary)", flag: "🇭🇺", languages: ["Hungarian"], currencies: ["HUF"] },
+      { code: "id-ID", label: "Indonesian (Indonesia)", flag: "🇮🇩", languages: ["Indonesian"], currencies: ["IDR"] },
+      { code: "it-IT", label: "Italian (Italy)", flag: "🇮🇹", languages: ["Italian"], currencies: ["EUR"] },
+      { code: "ja-JP", label: "Japanese (Japan)", flag: "🇯🇵", languages: ["Japanese"], currencies: ["JPY"] },
+      { code: "ko-KR", label: "Korean (South Korea)", flag: "🇰🇷", languages: ["Korean"], currencies: ["KRW"] },
+      { code: "ms-MY", label: "Malay (Malaysia)", flag: "🇲🇾", languages: ["Malay", "English"], currencies: ["MYR"] },
+      { code: "nb-NO", label: "Norwegian Bokmål (Norway)", flag: "🇳🇴", languages: ["Norwegian Bokmål", "Norwegian Nynorsk"], currencies: ["NOK"] },
+      { code: "pl-PL", label: "Polish (Poland)", flag: "🇵🇱", languages: ["Polish"], currencies: ["PLN"] },
+      { code: "pt-BR", label: "Portuguese (Brazil)", flag: "🇧🇷", languages: ["Portuguese"], currencies: ["BRL"] },
+      { code: "pt-PT", label: "Portuguese (Portugal)", flag: "🇵🇹", languages: ["Portuguese"], currencies: ["EUR"] },
+      { code: "ro-RO", label: "Romanian (Romania)", flag: "🇷🇴", languages: ["Romanian"], currencies: ["RON"] },
+      { code: "ru-RU", label: "Russian (Russia)", flag: "🇷🇺", languages: ["Russian"], currencies: ["RUB"] },
+      { code: "es-AR", label: "Spanish (Argentina)", flag: "🇦🇷", languages: ["Spanish"], currencies: ["ARS"] },
+      { code: "es-ES", label: "Spanish (Spain)", flag: "🇪🇸", languages: ["Spanish", "Catalan", "Galician", "Basque"], currencies: ["EUR"] },
+      { code: "es-MX", label: "Spanish (Mexico)", flag: "🇲🇽", languages: ["Spanish"], currencies: ["MXN"] },
+      { code: "sv-SE", label: "Swedish (Sweden)", flag: "🇸🇪", languages: ["Swedish"], currencies: ["SEK"] },
+      { code: "th-TH", label: "Thai (Thailand)", flag: "🇹🇭", languages: ["Thai"], currencies: ["THB"] },
+      { code: "tr-TR", label: "Turkish (Turkey)", flag: "🇹🇷", languages: ["Turkish"], currencies: ["TRY"] },
+      { code: "uk-UA", label: "Ukrainian (Ukraine)", flag: "🇺🇦", languages: ["Ukrainian"], currencies: ["UAH"] },
+      { code: "vi-VN", label: "Vietnamese (Vietnam)", flag: "🇻🇳", languages: ["Vietnamese"], currencies: ["VND"] },
+      { code: "zu-ZA", label: "Zulu (South Africa)", flag: "🇿🇦", languages: ["Zulu", "English", "Afrikaans", "Xhosa"], currencies: ["ZAR"] },
+    ];
+
+    // ==================================================================
+    // STATE
+    // ==================================================================
+    let selectedFrame = null;   // { id, name, width, height, imageBytes, textLayers }
+    let localeRows = [];        // array of { uid, code }
+    let isGenerating = false;
+    let translationResults = null; // array of { locale, localeMeta, layers:[{id,original,translated}] }
+
+    // ==================================================================
+    // DOM REFS
+    // ==================================================================
+    const $emptyState = document.getElementById("emptyState");
+    const $mainContent = document.getElementById("mainContent");
+    const $generatingState = document.getElementById("generatingState");
+    const $frameImage = document.getElementById("frameImage");
+    const $frameName = document.getElementById("frameName");
+    const $frameDim = document.getElementById("frameDim");
+    const $localeList = document.getElementById("localeList");
+    const $addLocaleBtn = document.getElementById("addLocaleBtn");
+    const $generateBtn = document.getElementById("generateBtn");
+    const $resultsSection = document.getElementById("resultsSection");
+    const $genStatus = document.getElementById("genStatus");
+    const $genProgress = document.getElementById("genProgress");
+    const $stepIndicator = document.getElementById("stepIndicator");
+
+    const $footer = document.getElementById("footer");
+
+    // ==================================================================
+    // UTILITY
+    // ==================================================================
+    let uidCounter = 0;
+    function uid() { return "lr-" + (++uidCounter); }
+
+    function showToast(message, type = "error") {
+      const el = document.createElement("div");
+      el.className = "toast " + type;
+      el.textContent = message;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 4000);
+    }
+
+    // ==================================================================
+    // RENDER FUNCTIONS
+    // ==================================================================
+
+    function renderView() {
+      if (isGenerating) {
+        $emptyState.classList.add("hidden");
+        $mainContent.classList.add("hidden");
+        $generatingState.classList.remove("hidden");
+        $generatingState.style.display = "flex";
+        $footer.classList.add("hidden");
+        return;
+      }
+      $generatingState.classList.add("hidden");
+      $generatingState.style.display = "none";
+      $footer.classList.remove("hidden");
+
+      if (!selectedFrame) {
+        $emptyState.classList.remove("hidden");
+        $mainContent.classList.add("hidden");
+        $generateBtn.disabled = true;
+        $stepIndicator.textContent = "Select a frame";
+        return;
+      }
+
+      $emptyState.classList.add("hidden");
+      $mainContent.classList.remove("hidden");
+      $stepIndicator.textContent = "Configure locales";
+
+      // Frame preview — revoke previous blob URL to prevent memory leak
+      if ($frameImage.src && $frameImage.src.startsWith("blob:")) {
+        URL.revokeObjectURL($frameImage.src);
+      }
+      const blob = new Blob([new Uint8Array(selectedFrame.imageBytes)], { type: "image/png" });
+      $frameImage.src = URL.createObjectURL(blob);
+      $frameName.textContent = selectedFrame.name;
+      $frameDim.textContent = selectedFrame.width + " × " + selectedFrame.height;
+
       renderLocaleRows();
       updateGenerateButton();
-    });
-    el.appendChild(rmBtn);
 
-    $localeList.appendChild(el);
-  });
+      // If we have results, show them
+      if (translationResults) {
+        renderResults();
+      }
+    }
 
-  $addLocaleBtn.disabled = localeRows.length >= 5;
-}
+    function renderLocaleRows() {
+      $localeList.innerHTML = "";
+      localeRows.forEach((row, idx) => {
+        const el = document.createElement("div");
+        el.className = "locale-row fade-in";
 
-function updateGenerateButton() {
-  const hasLocales = localeRows.some(r => r.code);
-  const hasFrame = !!selectedFrame;
-  $generateBtn.disabled = !(hasFrame && hasLocales);
+        const selWrap = document.createElement("div");
+        selWrap.className = "locale-select-wrap";
 
-  if (translationResults) {
-    // Switch to "Apply" button set
-    $footer.innerHTML = `
+        const sel = document.createElement("select");
+        sel.className = "locale-select";
+        // Placeholder
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "Choose a locale…";
+        placeholder.disabled = true;
+        if (!row.code) placeholder.selected = true;
+        sel.appendChild(placeholder);
+
+        // Already-chosen codes (to prevent duplicates)
+        const chosen = new Set(localeRows.filter((r, i) => i !== idx && r.code).map(r => r.code));
+
+        LOCALES.forEach(loc => {
+          const opt = document.createElement("option");
+          opt.value = loc.code;
+          opt.textContent = loc.flag + "  " + loc.label;
+          if (chosen.has(loc.code)) opt.disabled = true;
+          if (row.code === loc.code) opt.selected = true;
+          sel.appendChild(opt);
+        });
+
+        sel.addEventListener("change", () => {
+          localeRows[idx].code = sel.value;
+          renderLocaleRows();
+          updateGenerateButton();
+        });
+
+        selWrap.appendChild(sel);
+
+        // Info line — built with safe DOM methods
+        if (row.code) {
+          const meta = LOCALES.find(l => l.code === row.code);
+          if (meta) {
+            const info = document.createElement("div");
+            info.className = "locale-info";
+            meta.languages.forEach(l => {
+              const tag = document.createElement("span");
+              tag.className = "tag";
+              tag.textContent = l;
+              info.appendChild(tag);
+            });
+            meta.currencies.forEach(c => {
+              const tag = document.createElement("span");
+              tag.className = "tag";
+              tag.style.background = "var(--accent-light)";
+              tag.style.color = "var(--accent)";
+              tag.textContent = c;
+              info.appendChild(tag);
+            });
+            selWrap.appendChild(info);
+          }
+        }
+
+        el.appendChild(selWrap);
+
+        // Remove button
+        const rmBtn = document.createElement("button");
+        rmBtn.className = "locale-remove-btn";
+        rmBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg>';
+        rmBtn.title = "Remove locale";
+        rmBtn.addEventListener("click", () => {
+          localeRows.splice(idx, 1);
+          renderLocaleRows();
+          updateGenerateButton();
+        });
+        el.appendChild(rmBtn);
+
+        $localeList.appendChild(el);
+      });
+
+      $addLocaleBtn.disabled = localeRows.length >= 5;
+    }
+
+    function updateGenerateButton() {
+      const hasLocales = localeRows.some(r => r.code);
+      const hasFrame = !!selectedFrame;
+      $generateBtn.disabled = !(hasFrame && hasLocales);
+
+      if (translationResults) {
+        // Switch to "Apply" button set
+        $footer.innerHTML = `
       <button class="btn-primary" id="applyBtn">Apply to Canvas</button>
       <button class="btn-secondary" id="resetBtn">Start Over</button>
     `;
-    document.getElementById("applyBtn").addEventListener("click", applyTranslations);
-    document.getElementById("resetBtn").addEventListener("click", resetResults);
-  } else {
-    $footer.innerHTML = '';
-    const btn = document.createElement("button");
-    btn.className = "btn-primary";
-    btn.id = "generateBtn";
-    btn.disabled = !(hasFrame && hasLocales);
-    btn.textContent = "Generate Translations";
-    btn.addEventListener("click", startGeneration);
-    $footer.appendChild(btn);
-  }
-}
+        document.getElementById("applyBtn").addEventListener("click", applyTranslations);
+        document.getElementById("resetBtn").addEventListener("click", resetResults);
+      } else {
+        $footer.innerHTML = '';
+        const btn = document.createElement("button");
+        btn.className = "btn-primary";
+        btn.id = "generateBtn";
+        btn.disabled = !(hasFrame && hasLocales);
+        btn.textContent = "Generate Translations";
+        btn.addEventListener("click", startGeneration);
+        $footer.appendChild(btn);
+      }
+    }
 
-function renderResults() {
-  if (!translationResults) { $resultsSection.classList.add("hidden"); return; }
-  $resultsSection.classList.remove("hidden");
-  $resultsSection.innerHTML = "";
-  $stepIndicator.textContent = "Review translations";
+    function renderResults() {
+      if (!translationResults) { $resultsSection.classList.add("hidden"); return; }
+      $resultsSection.classList.remove("hidden");
+      $resultsSection.innerHTML = "";
+      $stepIndicator.textContent = "Review translations";
 
-  translationResults.forEach((res, idx) => {
-    const card = document.createElement("div");
-    card.className = "result-card fade-in";
-    card.style.animationDelay = (idx * 80) + "ms";
+      translationResults.forEach((res, idx) => {
+        const card = document.createElement("div");
+        card.className = "result-card fade-in";
+        card.style.animationDelay = (idx * 80) + "ms";
 
-    // Build header with safe DOM methods (no innerHTML for user-influenced data)
-    const header = document.createElement("div");
-    header.className = "result-header open";
-    const flagSpan = document.createElement("span");
-    flagSpan.className = "flag";
-    flagSpan.textContent = res.localeMeta ? res.localeMeta.flag : "";
-    const labelSpan = document.createElement("span");
-    labelSpan.textContent = res.locale;
-    const chevronSpan = document.createElement("span");
-    chevronSpan.className = "chevron";
-    chevronSpan.textContent = "\u25BC";
-    header.appendChild(flagSpan);
-    header.appendChild(labelSpan);
-    header.appendChild(chevronSpan);
+        // Build header with safe DOM methods (no innerHTML for user-influenced data)
+        const header = document.createElement("div");
+        header.className = "result-header open";
+        const flagSpan = document.createElement("span");
+        flagSpan.className = "flag";
+        flagSpan.textContent = res.localeMeta ? res.localeMeta.flag : "";
+        const labelSpan = document.createElement("span");
+        labelSpan.textContent = res.locale;
+        const chevronSpan = document.createElement("span");
+        chevronSpan.className = "chevron";
+        chevronSpan.textContent = "\u25BC";
+        header.appendChild(flagSpan);
+        header.appendChild(labelSpan);
+        header.appendChild(chevronSpan);
 
-    const body = document.createElement("div");
-    body.className = "result-body open";
+        const body = document.createElement("div");
+        body.className = "result-body open";
 
-    res.layers.forEach(layer => {
-      const row = document.createElement("div");
-      row.className = "translation-row";
+        res.layers.forEach(layer => {
+          const row = document.createElement("div");
+          row.className = "translation-row";
 
-      const origSpan = document.createElement("span");
-      origSpan.className = "translation-original";
-      origSpan.textContent = layer.original;
-      origSpan.title = layer.original;
+          const origSpan = document.createElement("span");
+          origSpan.className = "translation-original";
+          origSpan.textContent = layer.original;
+          origSpan.title = layer.original;
 
-      const arrowSpan = document.createElement("span");
-      arrowSpan.className = "translation-arrow";
-      arrowSpan.textContent = "\u2192";
+          const arrowSpan = document.createElement("span");
+          arrowSpan.className = "translation-arrow";
+          arrowSpan.textContent = "\u2192";
 
-      const transSpan = document.createElement("span");
-      transSpan.className = "translation-translated";
-      transSpan.textContent = layer.translated;
+          const transSpan = document.createElement("span");
+          transSpan.className = "translation-translated";
+          transSpan.textContent = layer.translated;
 
-      row.appendChild(origSpan);
-      row.appendChild(arrowSpan);
-      row.appendChild(transSpan);
-      body.appendChild(row);
-    });
+          row.appendChild(origSpan);
+          row.appendChild(arrowSpan);
+          row.appendChild(transSpan);
+          body.appendChild(row);
+        });
 
-    header.addEventListener("click", () => {
-      header.classList.toggle("open");
-      body.classList.toggle("open");
-    });
+        header.addEventListener("click", () => {
+          header.classList.toggle("open");
+          body.classList.toggle("open");
+        });
 
-    card.appendChild(header);
-    card.appendChild(body);
-    $resultsSection.appendChild(card);
-  });
-}
-
-/** Escape HTML for both element content and attribute values. */
-function escHtml(s) {
-  if (typeof s !== "string") return "";
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-// ==================================================================
-// LOCALE ROW MANAGEMENT
-// ==================================================================
-$addLocaleBtn.addEventListener("click", () => {
-  if (localeRows.length >= 5) return;
-  localeRows.push({ uid: uid(), code: "" });
-  renderLocaleRows();
-  updateGenerateButton();
-});
-
-// Add one row by default when frame is selected
-function ensureAtLeastOneLocale() {
-  if (localeRows.length === 0) {
-    localeRows.push({ uid: uid(), code: "" });
-  }
-}
-
-// ==================================================================
-// TRANSLATION ENGINE
-// ==================================================================
-
-async function startGeneration() {
-  const apiKey = $apiKeyInput.value.trim();
-  if (!apiKey) {
-    showToast("Please enter your OpenAI API key to generate translations.");
-    return;
-  }
-
-  const selectedLocales = localeRows.filter(r => r.code).map(r => {
-    const meta = LOCALES.find(l => l.code === r.code);
-    return { code: r.code, meta };
-  });
-
-  if (selectedLocales.length === 0) {
-    showToast("Please select at least one locale.");
-    return;
-  }
-
-  if (!selectedFrame || !selectedFrame.textLayers || selectedFrame.textLayers.length === 0) {
-    showToast("The selected frame has no text layers to translate.");
-    return;
-  }
-
-  isGenerating = true;
-  translationResults = null;
-  renderView();
-
-  try {
-    const results = [];
-    for (let i = 0; i < selectedLocales.length; i++) {
-      const loc = selectedLocales[i];
-      const pct = Math.round(((i) / selectedLocales.length) * 100);
-      $genStatus.textContent = "Translating to " + loc.meta.label + "…";
-      $genProgress.style.width = pct + "%";
-
-      const translated = await translateLayers(
-        selectedFrame.textLayers,
-        loc.code,
-        loc.meta,
-        apiKey
-      );
-
-      results.push({
-        locale: loc.meta.label,
-        localeCode: loc.code,
-        localeMeta: loc.meta,
-        layers: translated,
+        card.appendChild(header);
+        card.appendChild(body);
+        $resultsSection.appendChild(card);
       });
     }
 
-    $genProgress.style.width = "100%";
-    $genStatus.textContent = "Done!";
-    translationResults = results;
+    /** Escape HTML for both element content and attribute values. */
+    function escHtml(s) {
+      if (typeof s !== "string") return "";
+      return s
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
 
-    await new Promise(r => setTimeout(r, 500));
-    isGenerating = false;
-    renderView();
+    // ==================================================================
+    // LOCALE ROW MANAGEMENT
+    // ==================================================================
+    $addLocaleBtn.addEventListener("click", () => {
+      if (localeRows.length >= 5) return;
+      localeRows.push({ uid: uid(), code: "" });
+      renderLocaleRows();
+      updateGenerateButton();
+    });
 
-  } catch (err) {
-    isGenerating = false;
-    renderView();
-    showToast("Translation failed: " + (err.message || err));
-  }
-}
+    // Add one row by default when frame is selected
+    function ensureAtLeastOneLocale() {
+      if (localeRows.length === 0) {
+        localeRows.push({ uid: uid(), code: "" });
+      }
+    }
 
-async function translateLayers(textLayers, localeCode, localeMeta, apiKey) {
-  // Build a structured prompt for GPT-4o-nano
-  const textsPayload = textLayers.map(l => ({
-    id: l.id,
-    layerName: l.name,
-    text: l.characters,
-  }));
+    // ==================================================================
+    // TRANSLATION ENGINE
+    // ==================================================================
 
-  const systemPrompt = `You are a professional UI content localiser. You will receive a JSON array of text layers extracted from a design frame. Your task is to translate/localise every text layer for the locale "${localeCode}" (${localeMeta.label}).
+    async function startGeneration() {
+      const selectedLocales = localeRows.filter(r => r.code).map(r => {
+        const meta = LOCALES.find(l => l.code === r.code);
+        return { code: r.code, meta };
+      });
+
+      if (selectedLocales.length === 0) {
+        showToast("Please select at least one locale.");
+        return;
+      }
+
+      if (!selectedFrame || !selectedFrame.textLayers || selectedFrame.textLayers.length === 0) {
+        showToast("The selected frame has no text layers to translate.");
+        return;
+      }
+
+      isGenerating = true;
+      translationResults = null;
+      renderView();
+
+      try {
+        const results = [];
+        for (let i = 0; i < selectedLocales.length; i++) {
+          const loc = selectedLocales[i];
+          const pct = Math.round(((i) / selectedLocales.length) * 100);
+          $genStatus.textContent = "Translating to " + loc.meta.label + "…";
+          $genProgress.style.width = pct + "%";
+
+          const translated = await translateLayers(
+            selectedFrame.textLayers,
+            loc.code,
+            loc.meta
+          );
+
+          results.push({
+            locale: loc.meta.label,
+            localeCode: loc.code,
+            localeMeta: loc.meta,
+            layers: translated,
+          });
+        }
+
+        $genProgress.style.width = "100%";
+        $genStatus.textContent = "Done!";
+        translationResults = results;
+
+        await new Promise(r => setTimeout(r, 500));
+        isGenerating = false;
+        renderView();
+
+      } catch (err) {
+        isGenerating = false;
+        renderView();
+        showToast("Translation failed: " + (err.message || err));
+      }
+    }
+
+    const WORKER_URL = "https://localyse-proxy.adiramanan98.workers.dev";
+
+    async function translateLayers(textLayers, localeCode, localeMeta) {
+      // Build a structured prompt for GPT-4o-mini
+      const textsPayload = textLayers.map(l => ({
+        id: l.id,
+        layerName: l.name,
+        text: l.characters,
+      }));
+
+      const systemPrompt = `You are a professional UI content localiser. You will receive a JSON array of text layers extracted from a design frame. Your task is to translate/localise every text layer for the locale "${localeCode}" (${localeMeta.label}).
 
 RULES:
 1. **Language**: Translate all generic UI copy, labels, and body text into the primary language of the locale: ${localeMeta.languages[0]}.
@@ -809,144 +1062,142 @@ RULES:
 
 Return a JSON array (same order) with objects: { "id": "<layer id>", "translated": "<translated text>" }. Return ONLY the JSON array, no markdown fences, no extra text.`;
 
-  const userPrompt = JSON.stringify(textsPayload, null, 2);
+      const userPrompt = JSON.stringify(textsPayload, null, 2);
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer " + apiKey,
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      temperature: 0.3,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-    }),
-  });
+      const response = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          temperature: 0.3,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+        }),
+      });
 
-  if (!response.ok) {
-    let errSummary = "HTTP " + response.status;
-    try {
-      const errJson = await response.json();
-      if (errJson && errJson.error && errJson.error.message) {
-        // Only show the API's error message, truncated for safety
-        errSummary = String(errJson.error.message).slice(0, 200);
+      if (!response.ok) {
+        let errSummary = "HTTP " + response.status;
+        try {
+          const errJson = await response.json();
+          if (errJson && errJson.error && errJson.error.message) {
+            // Only show the API's error message, truncated for safety
+            errSummary = String(errJson.error.message).slice(0, 200);
+          }
+        } catch (_) { /* non-JSON error body — keep generic message */ }
+        throw new Error("OpenAI API error: " + errSummary);
       }
-    } catch (_) { /* non-JSON error body — keep generic message */ }
-    throw new Error("OpenAI API error: " + errSummary);
-  }
 
-  const data = await response.json();
+      const data = await response.json();
 
-  // Validate response structure
-  if (!data || !Array.isArray(data.choices) || !data.choices[0] ||
-      !data.choices[0].message || typeof data.choices[0].message.content !== "string") {
-    throw new Error("Unexpected response structure from OpenAI API.");
-  }
+      // Validate response structure
+      if (!data || !Array.isArray(data.choices) || !data.choices[0] ||
+        !data.choices[0].message || typeof data.choices[0].message.content !== "string") {
+        throw new Error("Unexpected response structure from OpenAI API.");
+      }
 
-  let content = data.choices[0].message.content.trim();
+      let content = data.choices[0].message.content.trim();
 
-  // Strip markdown fences if present
-  if (content.startsWith("```")) {
-    content = content.replace(/^```[\w]*\n?/, "").replace(/\n?```$/, "");
-  }
+      // Strip markdown fences if present
+      if (content.startsWith("```")) {
+        content = content.replace(/^```[\w]*\n?/, "").replace(/\n?```$/, "");
+      }
 
-  let translatedArray;
-  try {
-    translatedArray = JSON.parse(content);
-  } catch (parseErr) {
-    throw new Error("Failed to parse translation response as JSON.");
-  }
+      let translatedArray;
+      try {
+        translatedArray = JSON.parse(content);
+      } catch (parseErr) {
+        throw new Error("Failed to parse translation response as JSON.");
+      }
 
-  if (!Array.isArray(translatedArray)) {
-    throw new Error("Translation response is not an array.");
-  }
+      if (!Array.isArray(translatedArray)) {
+        throw new Error("Translation response is not an array.");
+      }
 
-  // Merge back with original text — only accept string values
-  return textLayers.map(layer => {
-    const match = translatedArray.find(t => t && t.id === layer.id);
-    const translated = (match && typeof match.translated === "string")
-      ? match.translated
-      : layer.characters;
-    return {
-      id: layer.id,
-      original: layer.characters,
-      translated: translated,
-    };
-  });
-}
-
-// ==================================================================
-// APPLY TRANSLATIONS TO CANVAS
-// ==================================================================
-
-function applyTranslations() {
-  if (!translationResults || !selectedFrame) return;
-
-  const payload = translationResults.map(res => ({
-    locale: res.locale,
-    layers: res.layers.map(l => ({ id: l.id, translated: l.translated })),
-  }));
-
-  parent.postMessage({
-    pluginMessage: {
-      type: "apply-translations",
-      sourceFrameId: selectedFrame.id,
-      translations: payload,
+      // Merge back with original text — only accept string values
+      return textLayers.map(layer => {
+        const match = translatedArray.find(t => t && t.id === layer.id);
+        const translated = (match && typeof match.translated === "string")
+          ? match.translated
+          : layer.characters;
+        return {
+          id: layer.id,
+          original: layer.characters,
+          translated: translated,
+        };
+      });
     }
-  }, "*"); // Figma requires "*" — plugin iframe is sandboxed with null origin
 
-  showToast("Applying translations to canvas…", "success");
-}
+    // ==================================================================
+    // APPLY TRANSLATIONS TO CANVAS
+    // ==================================================================
 
-function resetResults() {
-  translationResults = null;
-  $resultsSection.classList.add("hidden");
-  $resultsSection.innerHTML = "";
-  renderView();
-}
+    function applyTranslations() {
+      if (!translationResults || !selectedFrame) return;
 
-// ==================================================================
-// MESSAGES FROM PLUGIN SANDBOX
-// ==================================================================
+      const payload = translationResults.map(res => ({
+        locale: res.locale,
+        layers: res.layers.map(l => ({ id: l.id, translated: l.translated })),
+      }));
 
-window.onmessage = (event) => {
-  // Only accept messages from the parent frame (Figma sandbox)
-  if (event.source !== window.parent && event.source !== window) return;
-  const msg = event.data && event.data.pluginMessage;
-  if (!msg || typeof msg.type !== "string") return;
+      parent.postMessage({
+        pluginMessage: {
+          type: "apply-translations",
+          sourceFrameId: selectedFrame.id,
+          translations: payload,
+        }
+      }, "*"); // Figma requires "*" — plugin iframe is sandboxed with null origin
 
-  if (msg.type === "frame-selected") {
-    selectedFrame = msg.payload;
-    translationResults = null;
-    ensureAtLeastOneLocale();
+      showToast("Applying translations to canvas…", "success");
+    }
+
+    function resetResults() {
+      translationResults = null;
+      $resultsSection.classList.add("hidden");
+      $resultsSection.innerHTML = "";
+      renderView();
+    }
+
+    // ==================================================================
+    // MESSAGES FROM PLUGIN SANDBOX
+    // ==================================================================
+
+    window.onmessage = (event) => {
+      const msg = event.data && event.data.pluginMessage;
+      if (!msg || typeof msg.type !== "string") return;
+
+      if (msg.type === "frame-selected") {
+        selectedFrame = msg.payload;
+        translationResults = null;
+        ensureAtLeastOneLocale();
+        renderView();
+      }
+
+      if (msg.type === "no-selection") {
+        selectedFrame = null;
+        translationResults = null;
+        renderView();
+      }
+
+      if (msg.type === "apply-done") {
+        showToast("Localised frames created on canvas!", "success");
+      }
+    };
+
+    // ==================================================================
+    // INIT
+    // ==================================================================
     renderView();
-  }
 
-  if (msg.type === "no-selection") {
-    selectedFrame = null;
-    translationResults = null;
-    renderView();
-  }
-
-  if (msg.type === "apply-done") {
-    showToast("Localised frames created on canvas!", "success");
-  }
-};
-
-// ==================================================================
-// INIT
-// ==================================================================
-renderView();
-
-// Detect Figma dark theme
-if (document.documentElement.dataset.figmaTheme === "dark" ||
-    window.matchMedia("(prefers-color-scheme: dark)").matches) {
-  document.documentElement.classList.add("figma-dark");
-}
-</script>
+    // Detect Figma dark theme
+    if (document.documentElement.dataset.figmaTheme === "dark" ||
+      window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      document.documentElement.classList.add("figma-dark");
+    }
+  </script>
 </body>
+
 </html>

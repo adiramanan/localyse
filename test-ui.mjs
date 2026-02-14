@@ -211,7 +211,7 @@ function assert(condition, label) {
   console.log("\n5. Generate translation flow");
 
   // Enter a fake API key
-  await page.type("#apiKeyInput", "sk-test-mock-key-12345");
+  // Select locales for generation
 
   // Ensure at least one locale is selected (fr-FR should still be there)
   const selectedLocales = await page.$$eval(".locale-select", (sels) =>

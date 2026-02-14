@@ -6,9 +6,13 @@
   "ui": "ui.html",
   "capabilities": [],
   "enableProposedApi": false,
-  "editorType": ["figma"],
+  "editorType": [
+    "figma"
+  ],
   "networkAccess": {
-    "allowedDomains": ["https://api.openai.com"],
-    "reasoning": "Required to call the OpenAI API for smart content translation."
+    "allowedDomains": [
+      "https://localyse-proxy.adiramanan98.workers.dev"
+    ],
+    "reasoning": "Required to call the translation proxy for smart content translation."
   }
 }

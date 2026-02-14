@@ -59,7 +59,7 @@ function assert(condition, label) {
     (el) => el.getAttribute("content")
   );
   assert(cspTag && cspTag.includes("default-src 'none'"), "CSP default-src is 'none'");
-  assert(cspTag && cspTag.includes("connect-src https://api.openai.com"), "CSP connect-src restricts to OpenAI");
+  assert(cspTag && cspTag.includes("connect-src https://localyse-proxy."), "CSP connect-src restricts to proxy worker");
   assert(cspTag && cspTag.includes("img-src blob: data:"), "CSP img-src allows blob: and data:");
 
   // ------------------------------------------------------------------
@@ -83,8 +83,7 @@ function assert(condition, label) {
   }, FAKE_PNG_BYTES, xssLayers);
   await new Promise((r) => setTimeout(r, 300));
 
-  // Enter mock key and select a locale
-  await page.type("#apiKeyInput", "sk-test");
+  // Select a locale
   const localeSelects = await page.$$(".locale-select");
   if (localeSelects.length > 0) await localeSelects[0].select("fr-FR");
   await new Promise((r) => setTimeout(r, 200));
@@ -225,7 +224,7 @@ function assert(condition, label) {
     window.postMessage({
       pluginMessage: {
         type: "frame-selected",
-        payload: { id: "300:1", name: "Error Test", width: 800, height: 600, imageBytes: imgBytes, textLayers: [{ id: "e:1", name: "T", characters: "Hello", x:0, y:0, width:100, height:20 }] },
+        payload: { id: "300:1", name: "Error Test", width: 800, height: 600, imageBytes: imgBytes, textLayers: [{ id: "e:1", name: "T", characters: "Hello", x: 0, y: 0, width: 100, height: 20 }] },
       },
     }, "*");
   }, FAKE_PNG_BYTES);
