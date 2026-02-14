@@ -42,6 +42,63 @@ async function checkRateLimit(env, userId) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
+// Abbreviation dictionary (bypass Azure for known short terms)
+// ──────────────────────────────────────────────────────────────────────
+
+/**
+ * Common abbreviated terms that Azure Translator handles poorly.
+ * Keyed by uppercase English abbreviation → { langCode: localised abbreviation }
+ * Only covers concise forms. Full words go through Azure normally.
+ */
+const ABBREV_DICT = {
+    // Abbreviated months
+    JAN: { fr: "JANV", de: "JAN", es: "ENE", it: "GEN", pt: "JAN", nl: "JAN", pl: "STY", cs: "LED", da: "JAN", sv: "JAN", nb: "JAN", fi: "TAMMI", ro: "IAN", hu: "JAN", tr: "OCA", ru: "ЯНВ", uk: "СІЧ", ar: "يناير", ja: "1月", ko: "1월", zh: "1月", hi: "जन", th: "ม.ค.", vi: "Th1", id: "JAN", ms: "JAN", bg: "ЯНУ", hr: "SIJ", sk: "JAN", sl: "JAN", lt: "SAU", lv: "JAN", et: "JAAN", el: "ΙΑΝ", he: "ינו" },
+    FEB: { fr: "FÉV", de: "FEB", es: "FEB", it: "FEB", pt: "FEV", nl: "FEB", pl: "LUT", cs: "ÚNO", da: "FEB", sv: "FEB", nb: "FEB", fi: "HELMI", ro: "FEB", hu: "FEB", tr: "ŞUB", ru: "ФЕВ", uk: "ЛЮТ", ar: "فبراير", ja: "2月", ko: "2월", zh: "2月", hi: "फर", th: "ก.พ.", vi: "Th2", id: "FEB", ms: "FEB", bg: "ФЕВ", hr: "VEL", sk: "FEB", sl: "FEB", lt: "VAS", lv: "FEB", et: "VEEBR", el: "ΦΕΒ", he: "פבר" },
+    MAR: { fr: "MARS", de: "MÄR", es: "MAR", it: "MAR", pt: "MAR", nl: "MRT", pl: "MAR", cs: "BŘE", da: "MAR", sv: "MAR", nb: "MAR", fi: "MAALIS", ro: "MAR", hu: "MÁR", tr: "MAR", ru: "МАР", uk: "БЕР", ar: "مارس", ja: "3月", ko: "3월", zh: "3月", hi: "मार्च", th: "มี.ค.", vi: "Th3", id: "MAR", ms: "MAC", bg: "МАР", hr: "OŽU", sk: "MAR", sl: "MAR", lt: "KOV", lv: "MAR", et: "MÄRTS", el: "ΜΑΡ", he: "מרץ" },
+    APR: { fr: "AVR", de: "APR", es: "ABR", it: "APR", pt: "ABR", nl: "APR", pl: "KWI", cs: "DUB", da: "APR", sv: "APR", nb: "APR", fi: "HUHTI", ro: "APR", hu: "ÁPR", tr: "NİS", ru: "АПР", uk: "КВІ", ar: "أبريل", ja: "4月", ko: "4월", zh: "4月", hi: "अप्रै", th: "เม.ย.", vi: "Th4", id: "APR", ms: "APR", bg: "АПР", hr: "TRA", sk: "APR", sl: "APR", lt: "BAL", lv: "APR", et: "APR", el: "ΑΠΡ", he: "אפר" },
+    MAY: { fr: "MAI", de: "MAI", es: "MAY", it: "MAG", pt: "MAI", nl: "MEI", pl: "MAJ", cs: "KVĚ", da: "MAJ", sv: "MAJ", nb: "MAI", fi: "TOUKO", ro: "MAI", hu: "MÁJ", tr: "MAY", ru: "МАЙ", uk: "ТРА", ar: "مايو", ja: "5月", ko: "5월", zh: "5月", hi: "मई", th: "พ.ค.", vi: "Th5", id: "MEI", ms: "MEI", bg: "МАЙ", hr: "SVI", sk: "MÁJ", sl: "MAJ", lt: "GEG", lv: "MAI", et: "MAI", el: "ΜΑΪ", he: "מאי" },
+    JUN: { fr: "JUIN", de: "JUN", es: "JUN", it: "GIU", pt: "JUN", nl: "JUN", pl: "CZE", cs: "ČER", da: "JUN", sv: "JUN", nb: "JUN", fi: "KESÄ", ro: "IUN", hu: "JÚN", tr: "HAZ", ru: "ИЮН", uk: "ЧЕР", ar: "يونيو", ja: "6月", ko: "6월", zh: "6月", hi: "जून", th: "มิ.ย.", vi: "Th6", id: "JUN", ms: "JUN", bg: "ЮНИ", hr: "LIP", sk: "JÚN", sl: "JUN", lt: "BIR", lv: "JŪN", et: "JUUNI", el: "ΙΟΥΝ", he: "יונ" },
+    JUL: { fr: "JUIL", de: "JUL", es: "JUL", it: "LUG", pt: "JUL", nl: "JUL", pl: "LIP", cs: "ČVC", da: "JUL", sv: "JUL", nb: "JUL", fi: "HEINÄ", ro: "IUL", hu: "JÚL", tr: "TEM", ru: "ИЮЛ", uk: "ЛИП", ar: "يوليو", ja: "7月", ko: "7월", zh: "7月", hi: "जुल", th: "ก.ค.", vi: "Th7", id: "JUL", ms: "JUL", bg: "ЮЛИ", hr: "SRP", sk: "JÚL", sl: "JUL", lt: "LIE", lv: "JŪL", et: "JUULI", el: "ΙΟΥΛ", he: "יול" },
+    AUG: { fr: "AOÛT", de: "AUG", es: "AGO", it: "AGO", pt: "AGO", nl: "AUG", pl: "SIE", cs: "SRP", da: "AUG", sv: "AUG", nb: "AUG", fi: "ELO", ro: "AUG", hu: "AUG", tr: "AĞU", ru: "АВГ", uk: "СЕР", ar: "أغسطس", ja: "8月", ko: "8월", zh: "8月", hi: "अग", th: "ส.ค.", vi: "Th8", id: "AGT", ms: "OGS", bg: "АВГ", hr: "KOL", sk: "AUG", sl: "AVG", lt: "RGP", lv: "AUG", et: "AUG", el: "ΑΥΓ", he: "אוג" },
+    SEP: { fr: "SEPT", de: "SEP", es: "SEP", it: "SET", pt: "SET", nl: "SEP", pl: "WRZ", cs: "ZÁŘ", da: "SEP", sv: "SEP", nb: "SEP", fi: "SYYS", ro: "SEP", hu: "SZEP", tr: "EYL", ru: "СЕН", uk: "ВЕР", ar: "سبتمبر", ja: "9月", ko: "9월", zh: "9月", hi: "सित", th: "ก.ย.", vi: "Th9", id: "SEP", ms: "SEP", bg: "СЕП", hr: "RUJ", sk: "SEP", sl: "SEP", lt: "RGS", lv: "SEP", et: "SEPT", el: "ΣΕΠ", he: "ספט" },
+    OCT: { fr: "OCT", de: "OKT", es: "OCT", it: "OTT", pt: "OUT", nl: "OKT", pl: "PAŹ", cs: "ŘÍJ", da: "OKT", sv: "OKT", nb: "OKT", fi: "LOKA", ro: "OCT", hu: "OKT", tr: "EKİ", ru: "ОКТ", uk: "ЖОВ", ar: "أكتوبر", ja: "10月", ko: "10월", zh: "10月", hi: "अक्टू", th: "ต.ค.", vi: "Th10", id: "OKT", ms: "OKT", bg: "ОКТ", hr: "LIS", sk: "OKT", sl: "OKT", lt: "SPL", lv: "OKT", et: "OKT", el: "ΟΚΤ", he: "אוק" },
+    NOV: { fr: "NOV", de: "NOV", es: "NOV", it: "NOV", pt: "NOV", nl: "NOV", pl: "LIS", cs: "LIS", da: "NOV", sv: "NOV", nb: "NOV", fi: "MARRAS", ro: "NOI", hu: "NOV", tr: "KAS", ru: "НОЯ", uk: "ЛИС", ar: "نوفمبر", ja: "11月", ko: "11월", zh: "11月", hi: "नव", th: "พ.ย.", vi: "Th11", id: "NOV", ms: "NOV", bg: "НОЕ", hr: "STU", sk: "NOV", sl: "NOV", lt: "LAP", lv: "NOV", et: "NOV", el: "ΝΟΕ", he: "נוב" },
+    DEC: { fr: "DÉC", de: "DEZ", es: "DIC", it: "DIC", pt: "DEZ", nl: "DEC", pl: "GRU", cs: "PRO", da: "DEC", sv: "DEC", nb: "DES", fi: "JOULU", ro: "DEC", hu: "DEC", tr: "ARA", ru: "ДЕК", uk: "ГРУ", ar: "ديسمبر", ja: "12月", ko: "12월", zh: "12月", hi: "दिस", th: "ธ.ค.", vi: "Th12", id: "DES", ms: "DIS", bg: "ДЕК", hr: "PRO", sk: "DEC", sl: "DEC", lt: "GRD", lv: "DEC", et: "DETS", el: "ΔΕΚ", he: "דצמ" },
+    // Abbreviated weekdays
+    MON: { fr: "LUN", de: "MO", es: "LUN", it: "LUN", pt: "SEG", nl: "MA", pl: "PON", cs: "PO", da: "MAN", sv: "MÅN", nb: "MAN", fi: "MA", ro: "LUN", hu: "HÉT", tr: "PZT", ru: "ПН", uk: "ПН", ar: "اثن", ja: "月", ko: "월", zh: "一", hi: "सोम", th: "จ.", vi: "T2", id: "SEN", ms: "ISN" },
+    TUE: { fr: "MAR", de: "DI", es: "MAR", it: "MAR", pt: "TER", nl: "DI", pl: "WT", cs: "ÚT", da: "TIR", sv: "TIS", nb: "TIR", fi: "TI", ro: "MAR", hu: "KED", tr: "SAL", ru: "ВТ", uk: "ВТ", ar: "ثلا", ja: "火", ko: "화", zh: "二", hi: "मंगल", th: "อ.", vi: "T3", id: "SEL", ms: "SEL" },
+    WED: { fr: "MER", de: "MI", es: "MIÉ", it: "MER", pt: "QUA", nl: "WO", pl: "ŚR", cs: "ST", da: "ONS", sv: "ONS", nb: "ONS", fi: "KE", ro: "MIE", hu: "SZE", tr: "ÇAR", ru: "СР", uk: "СР", ar: "أرب", ja: "水", ko: "수", zh: "三", hi: "बुध", th: "พ.", vi: "T4", id: "RAB", ms: "RAB" },
+    THU: { fr: "JEU", de: "DO", es: "JUE", it: "GIO", pt: "QUI", nl: "DO", pl: "CZW", cs: "ČT", da: "TOR", sv: "TOR", nb: "TOR", fi: "TO", ro: "JOI", hu: "CSÜ", tr: "PER", ru: "ЧТ", uk: "ЧТ", ar: "خمي", ja: "木", ko: "목", zh: "四", hi: "गुरु", th: "พฤ.", vi: "T5", id: "KAM", ms: "KHA" },
+    FRI: { fr: "VEN", de: "FR", es: "VIE", it: "VEN", pt: "SEX", nl: "VR", pl: "PT", cs: "PÁ", da: "FRE", sv: "FRE", nb: "FRE", fi: "PE", ro: "VIN", hu: "PÉN", tr: "CUM", ru: "ПТ", uk: "ПТ", ar: "جمع", ja: "金", ko: "금", zh: "五", hi: "शुक्र", th: "ศ.", vi: "T6", id: "JUM", ms: "JUM" },
+    SAT: { fr: "SAM", de: "SA", es: "SÁB", it: "SAB", pt: "SÁB", nl: "ZA", pl: "SOB", cs: "SO", da: "LØR", sv: "LÖR", nb: "LØR", fi: "LA", ro: "SÂM", hu: "SZO", tr: "CUM", ru: "СБ", uk: "СБ", ar: "سبت", ja: "土", ko: "토", zh: "六", hi: "शनि", th: "ส.", vi: "T7", id: "SAB", ms: "SAB" },
+    SUN: { fr: "DIM", de: "SO", es: "DOM", it: "DOM", pt: "DOM", nl: "ZO", pl: "NIE", cs: "NE", da: "SØN", sv: "SÖN", nb: "SØN", fi: "SU", ro: "DUM", hu: "VAS", tr: "PAZ", ru: "ВС", uk: "НД", ar: "أحد", ja: "日", ko: "일", zh: "日", hi: "रवि", th: "อา.", vi: "CN", id: "MIN", ms: "AHD" },
+};
+
+/**
+ * Look up a short text in the abbreviation dictionary.
+ * Returns the localised abbreviation or null if not found.
+ * Matches case-insensitively, preserves original casing style.
+ */
+function lookupAbbrev(text, targetLocale) {
+    const upper = text.trim().toUpperCase();
+    const entry = ABBREV_DICT[upper];
+    if (!entry) return null;
+
+    // Azure codes can be "fr", "fr-ca", "zh-Hans", etc. — try exact, then base lang
+    const baseLang = targetLocale.split("-")[0].toLowerCase();
+    const match = entry[targetLocale] || entry[baseLang];
+    if (!match) return null;
+
+    // Preserve original casing style
+    if (text === text.toUpperCase()) return match.toUpperCase();
+    if (text === text.toLowerCase()) return match.toLowerCase();
+    if (text[0] === text[0].toUpperCase()) {
+        return match.charAt(0).toUpperCase() + match.slice(1).toLowerCase();
+    }
+    return match;
+}
+
+// ──────────────────────────────────────────────────────────────────────
 // Smart context formatting
 // ──────────────────────────────────────────────────────────────────────
 
@@ -72,9 +129,29 @@ function stripContext(translatedText, layerName) {
 // ──────────────────────────────────────────────────────────────────────
 
 async function translateWithAzure(env, textLayers, targetLocale) {
-    const layersWithContext = addContext(textLayers);
+    // Split layers into dictionary-resolved and needs-Azure
+    const results = new Array(textLayers.length);
+    const azureLayers = []; // { originalIndex, layer }
 
-    const azureBody = layersWithContext.map(l => ({ Text: l.contextText }));
+    for (let i = 0; i < textLayers.length; i++) {
+        const layer = textLayers[i];
+        const dictMatch = lookupAbbrev(layer.text, targetLocale);
+        if (dictMatch !== null) {
+            results[i] = { id: layer.id, translated: dictMatch };
+        } else {
+            azureLayers.push({ originalIndex: i, layer });
+        }
+    }
+
+    // If all layers were resolved from dictionary, skip Azure entirely
+    if (azureLayers.length === 0) return results;
+
+    // Send remaining layers to Azure
+    const contextLayers = azureLayers.map(({ layer }) => ({
+        ...layer,
+        contextText: `[${layer.layerName}] ${layer.text}`,
+    }));
+    const azureBody = contextLayers.map(l => ({ Text: l.contextText }));
 
     const url = `${AZURE_ENDPOINT}?api-version=${AZURE_API_VERSION}&to=${targetLocale}`;
 
@@ -93,16 +170,18 @@ async function translateWithAzure(env, textLayers, targetLocale) {
         throw new Error(`Azure Translator error (${response.status}): ${errText.slice(0, 200)}`);
     }
 
-    const results = await response.json();
+    const azureResults = await response.json();
 
-    // Azure returns [{translations: [{text: "...", to: "xx"}]}] per input
-    return textLayers.map((layer, i) => {
-        const translated = results[i]?.translations?.[0]?.text || layer.text;
-        return {
+    // Merge Azure results back into the results array
+    azureLayers.forEach(({ originalIndex, layer }, i) => {
+        const translated = azureResults[i]?.translations?.[0]?.text || layer.text;
+        results[originalIndex] = {
             id: layer.id,
             translated: stripContext(translated, layer.layerName),
         };
     });
+
+    return results;
 }
 
 // ──────────────────────────────────────────────────────────────────────
