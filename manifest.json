@@ -1,0 +1,14 @@
+{
+  "name": "Localyse",
+  "id": "localyse-figma-plugin",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "capabilities": [],
+  "enableProposedApi": false,
+  "editorType": ["figma"],
+  "networkAccess": {
+    "allowedDomains": ["https://api.openai.com"],
+    "reasoning": "Required to call the OpenAI API for smart content translation."
+  }
+}
