@@ -25,7 +25,7 @@
 <body>
   <div class="container">
     <h1>Privacy Policy</h1>
-    <p class="subtitle">Localyse — Figma Plugin &middot; Last updated: February 2025</p>
+    <p class="subtitle">Localyse — Figma Plugin &middot; Last updated: February 2026</p>
 
     <h2>What Localyse Does</h2>
     <p>Localyse is a Figma plugin that translates text layers in your design frames into
@@ -39,14 +39,17 @@
       <li><strong>Text content</strong> from the text layers in your selected frame</li>
       <li><strong>Layer names</strong> (used as context hints for more accurate translations)</li>
       <li><strong>Target locale code</strong> (e.g. fr, ja, ar)</li>
-      <li><strong>Your Figma user ID</strong> (used solely for rate limiting — 25 requests/day)</li>
+      <li><strong>Currency codes</strong> (if selected, e.g. USD, EUR — used for currency localisation)</li>
+      <li><strong>Your Figma user ID</strong> (used solely for rate limiting — 50 requests/day)</li>
+      <li><strong>Your IP address</strong> (used as a secondary rate-limiting measure; stored temporarily for up to 24 hours)</li>
     </ul>
 
     <div class="highlight">
-      <strong>We do not collect, store, or log any of your design content.</strong> Text is forwarded to
-      the translation service in real time and the response is returned to your plugin. Nothing is
-      persisted on our servers. Your Figma user ID is stored temporarily (up to 24 hours) in an
-      encrypted counter for rate limiting purposes only.
+      <strong>We do not collect or log any of your design content.</strong> Text is forwarded to
+      the translation services in real time and the response is returned to your plugin.
+      Translated results may be cached on our servers for up to 1 hour to speed up repeated
+      requests — cached data auto-deletes after that. Your Figma user ID and IP address are
+      stored temporarily (up to 24 hours) in counters for rate limiting purposes only.
     </div>
 
     <h2>Third-Party Services</h2>
@@ -55,6 +58,13 @@
     their <a href="https://learn.microsoft.com/en-us/legal/cognitive-services/translator/transparency-note" target="_blank">Translator
     transparency note</a> and <a href="https://privacy.microsoft.com/en-us/privacystatement" target="_blank">Privacy Statement</a>.
     Azure Translator does not store your submitted text after translation is complete.</p>
+
+    <p>Translations may also be refined through <strong>OpenAI's GPT-4o-mini</strong> model for
+    contextual accuracy — improving currency formatting, date localisation, and natural phrasing.
+    When this refinement is enabled, your text content and target locale are sent to the
+    <a href="https://api.openai.com" target="_blank">OpenAI API</a>. OpenAI's use of this data
+    is governed by their <a href="https://openai.com/policies/privacy-policy" target="_blank">Privacy
+    Policy</a>. Per OpenAI's API data usage policy, data sent via the API is not used to train their models.</p>
 
     <h2>Data We Do NOT Collect</h2>
     <ul>
@@ -65,14 +75,19 @@
     </ul>
 
     <h2>Rate Limiting</h2>
-    <p>To ensure fair usage, each user is limited to <strong>25 translation requests per day</strong>.
+    <p>To ensure fair usage, each user is limited to <strong>50 translation requests per day</strong>.
     Your anonymous Figma user ID is stored in a temporary counter that automatically expires after
-    24 hours. No other data is associated with this counter.</p>
+    24 hours. As a secondary abuse-prevention measure, your IP address is also used for rate limiting
+    with a separate daily cap. No other data is associated with these counters.</p>
 
     <h2>Data Storage</h2>
-    <p>Localyse does not have a database. The translation proxy is a stateless Cloudflare Worker.
-    The only stored data is a temporary rate-limit counter (user ID → request count) that
-    auto-deletes after 24 hours.</p>
+    <p>Localyse does not have a traditional database. The translation proxy is a Cloudflare Worker
+    that uses temporary key-value storage for two purposes:</p>
+    <ul>
+      <li><strong>Rate-limit counters</strong> (user ID → request count, IP → request count) — auto-delete after 24 hours</li>
+      <li><strong>Translation cache</strong> (hashed request → translated result) — auto-deletes after 1 hour</li>
+    </ul>
+    <p>No other data is stored. All temporary entries are automatically purged after their expiry.</p>
 
     <h2>Your Rights</h2>
     <p>Since we do not store personal data beyond a temporary anonymous counter, there is
