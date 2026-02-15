@@ -3,7 +3,7 @@
  *
  * Translates text layers via Azure Translator API with smart context formatting,
  * then optionally refines via GPT-4o-mini for contextual accuracy.
- * Includes per-user rate limiting (25 requests/day) via Cloudflare KV.
+ * Includes per-user rate limiting (50 requests/day) via Cloudflare KV.
  * Also serves the privacy policy at GET /privacy.
  *
  * Deploy:
@@ -21,7 +21,7 @@ const CORS_HEADERS = {
     "Access-Control-Allow-Headers": "Content-Type, X-User-Id",
 };
 
-const DAILY_LIMIT = 25;
+const DAILY_LIMIT = 50;
 const DAY_IN_SECONDS = 86400;
 
 const AZURE_ENDPOINT = "https://api.cognitive.microsofttranslator.com/translate";
@@ -44,7 +44,7 @@ const LLM_CHUNK_SIZE = 40;          // max layers per LLM refinement call
  * Dual rate limiting: per-user (primary) + per-IP (secondary defense).
  *
  * Note: KV get-then-put is not atomic, so two concurrent requests could
- * both pass the check. This is acceptable for a 25/day soft limit — at
+ * both pass the check. This is acceptable for a 50/day soft limit — at
  * worst a user gets 1-2 extra requests in a race.
  */
 async function checkRateLimit(env, userId, ipAddress) {
@@ -267,15 +267,21 @@ async function refineChunkWithLLM(env, textLayers, azureResults, targetLocale, l
         azureTranslation: r.translated,
     }));
 
-    const currencyHint = localeCurrencies && localeCurrencies.length > 0
-        ? `The target locale uses these currencies: ${localeCurrencies.join(", ")}.`
+    const hasCurrency = localeCurrencies && localeCurrencies.length > 0;
+    const currencyCode = hasCurrency ? localeCurrencies[0] : null;
+    const currencyHint = hasCurrency
+        ? `The user has explicitly selected this currency for the target locale: ${localeCurrencies.join(", ")}. You MUST use this currency — do NOT substitute the locale's default currency.`
         : "";
+
+    const currencyRule = hasCurrency
+        ? `1. **Currencies**: The user selected **${currencyCode}** as the target currency. You MUST convert ALL currency values to use the ${currencyCode} symbol and the target locale's number format. Keep the SAME numeric value — do NOT apply exchange rates. For example, if the target currency is EUR and locale is de-DE: $49.99 → 49,99 €, $1,200.50 → 1.200,50 €. If the target currency is INR and locale is hi-IN: $49.99 → ₹49.99. ALWAYS use the selected currency (${currencyCode}), even if it differs from the locale's default currency.`
+        : `1. **Currencies**: Reformat currency values to the target locale's default currency symbol and number format. Keep the SAME numeric value — do NOT apply exchange rates. ALWAYS replace $ with the target locale's currency symbol and adjust decimal/thousands separators to match the locale's conventions.`;
 
     const systemPrompt = `You are a UI localisation expert. You receive text layers from a design tool that have been machine-translated from English to locale "${targetLocale}" (${localeLabel || "unknown"}).
 ${currencyHint}
 
 Your job is to REFINE these translations for contextual accuracy:
-1. **Currencies**: Reformat currency values to the target locale's currency symbol and number format. Keep the SAME numeric value — do NOT apply exchange rates. ${currencyHint} For example, $49.99 → 49,99 € for German/EUR, $49.99 → ₹49.99 for Hindi/INR, $1,200.50 → 1.200,50 € for German/EUR. ALWAYS replace $ with the target locale's currency symbol and adjust decimal/thousands separators to match the locale's conventions.
+${currencyRule}
 2. **Dates & numbers**: Adapt date formats (MM/DD → DD/MM where appropriate) and number formatting (decimal separators, thousands separators).
 3. **Abbreviations**: Keep abbreviated text short. If the original is 3 letters, the translation should be similarly concise.
 4. **Tone & naturalness**: Make the text sound natural for a native speaker. Fix awkward machine translations.
@@ -396,7 +402,7 @@ const PRIVACY_POLICY_HTML = `<!DOCTYPE html>
       <li><strong>Text content</strong> from the text layers in your selected frame</li>
       <li><strong>Layer names</strong> (used as context hints for more accurate translations)</li>
       <li><strong>Target locale code</strong> (e.g. fr, ja, ar)</li>
-      <li><strong>Your Figma user ID</strong> (used solely for rate limiting — 25 requests/day)</li>
+      <li><strong>Your Figma user ID</strong> (used solely for rate limiting — 50 requests/day)</li>
     </ul>
 
     <div class="highlight">
@@ -422,7 +428,7 @@ const PRIVACY_POLICY_HTML = `<!DOCTYPE html>
     </ul>
 
     <h2>Rate Limiting</h2>
-    <p>To ensure fair usage, each user is limited to <strong>25 translation requests per day</strong>.
+    <p>To ensure fair usage, each user is limited to <strong>50 translation requests per day</strong>.
     Your anonymous Figma user ID is stored in a temporary counter that automatically expires after
     24 hours. No other data is associated with this counter.</p>
 
@@ -454,9 +460,9 @@ const PRIVACY_POLICY_HTML = `<!DOCTYPE html>
 
 const CACHE_TTL = 3600; // 1 hour
 
-/** Generate a deterministic cache key from input text + target locale. */
-async function makeCacheKey(textLayers, targetLocale) {
-    const input = JSON.stringify({ texts: textLayers.map(l => l.text), locale: targetLocale });
+/** Generate a deterministic cache key from input text + target locale + currencies. */
+async function makeCacheKey(textLayers, targetLocale, localeCurrencies) {
+    const input = JSON.stringify({ texts: textLayers.map(l => l.text), locale: targetLocale, currencies: localeCurrencies || [] });
     const encoded = new TextEncoder().encode(input);
     const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -520,7 +526,7 @@ export default {
         if (!rateCheck.allowed) {
             return Response.json(
                 {
-                    error: "Daily limit reached (25 translations/day). Please try again tomorrow.",
+                    error: "Daily limit reached (50 translations/day). Please try again tomorrow.",
                     rateLimited: true,
                 },
                 {
@@ -569,7 +575,7 @@ export default {
             }
 
             // --- Check translation cache ---
-            const cacheKey = await makeCacheKey(textLayers, targetLocale);
+            const cacheKey = await makeCacheKey(textLayers, targetLocale, localeCurrencies);
             const cached = await getCachedTranslation(env, cacheKey);
             if (cached) {
                 return Response.json(cached, {

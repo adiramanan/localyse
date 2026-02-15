@@ -1471,7 +1471,11 @@
 
         chip.addEventListener("click", () => {
           // Load this preset's locales
-          localeRows = preset.locales.map(code => ({ uid: uid(), code, currency: null }));
+          localeRows = preset.locales.map(code => {
+            const meta = LOCALES.find(l => l.code === code);
+            const defaultCurrency = meta && meta.currencies && meta.currencies.length > 0 ? meta.currencies[0] : null;
+            return { uid: uid(), code, currency: defaultCurrency };
+          });
           renderLocaleRows();
           updateGenerateButton();
           saveLocalesToStorage();
@@ -1581,12 +1585,22 @@
       const trigger = document.createElement("div");
       trigger.className = "custom-select-trigger";
 
-      const selectedLocale = LOCALES.find(l => l.code === row.code);
-      if (selectedLocale) {
-        trigger.innerHTML = `<span style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px">${selectedLocale.flag}</span> ${selectedLocale.label}</span>`;
-        trigger.classList.add("active");
+      if (type === "CURRENCY") {
+        const selectedCurrency = CURRENCIES.find(c => c.code === row.currency);
+        if (selectedCurrency) {
+          trigger.innerHTML = `<span style="display:flex;align-items:center;gap:6px;"><span style="font-size:14px;font-weight:600;">${selectedCurrency.symbol}</span> ${selectedCurrency.code}</span>`;
+          trigger.classList.add("active");
+        } else {
+          trigger.innerHTML = '<span class="placeholder">Currency…</span>';
+        }
       } else {
-        trigger.innerHTML = '<span class="placeholder">Choose a locale…</span>';
+        const selectedLocale = LOCALES.find(l => l.code === row.code);
+        if (selectedLocale) {
+          trigger.innerHTML = `<span style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px">${selectedLocale.flag}</span> ${selectedLocale.label}</span>`;
+          trigger.classList.add("active");
+        } else {
+          trigger.innerHTML = '<span class="placeholder">Choose a locale…</span>';
+        }
       }
 
       const arrow = document.createElement("span");
@@ -1603,7 +1617,7 @@
       const searchInput = document.createElement("input");
       searchInput.type = "text";
       searchInput.className = "search-input";
-      searchInput.placeholder = "Search languages...";
+      searchInput.placeholder = type === "CURRENCY" ? "Search currencies..." : "Search languages...";
       searchInput.addEventListener("click", e => e.stopPropagation());
       searchWrap.appendChild(searchInput);
       menu.appendChild(searchWrap);
@@ -1621,14 +1635,14 @@
         if (!wasOpen) {
           menu.classList.add("open");
           searchInput.value = "";
-          renderOptions(list, "", row.code, idx, menu);
+          renderOptions(list, "", row.code, idx, menu, type, row.currency);
           setTimeout(() => searchInput.focus(), 50);
         }
       });
 
       // Search Logic
       searchInput.addEventListener("input", () => {
-        renderOptions(list, searchInput.value, row.code, idx, menu);
+        renderOptions(list, searchInput.value, row.code, idx, menu, type, row.currency);
       });
 
       // P2.4: Keyboard navigation for the dropdown
@@ -1687,41 +1701,86 @@
       container.appendChild(wrap);
     }
 
-    function renderOptions(listContainer, query, currentCode, rowIdx, menu) {
+    function renderOptions(listContainer, query, currentCode, rowIdx, menu, type, currentCurrency) {
       listContainer.innerHTML = "";
       const q = query.toLowerCase();
 
-      // Filter locales - exclude already selected (except current)
-      const otherSelectedCodes = localeRows
-        .filter((r, i) => i !== rowIdx && r.code)
-        .map(r => r.code);
+      if (type === "CURRENCY") {
+        // --- CURRENCY OPTIONS ---
+        const filtered = CURRENCIES.filter(cur => {
+          if (!q) return true;
+          return cur.code.toLowerCase().includes(q) ||
+            cur.name.toLowerCase().includes(q) ||
+            cur.symbol.toLowerCase().includes(q);
+        });
 
-      const filtered = LOCALES.filter(loc => {
-        if (otherSelectedCodes.includes(loc.code)) return false;
-        if (!q) return true;
-        return loc.label.toLowerCase().includes(q) ||
-          loc.languages.some(Native => Native.toLowerCase().includes(q)) ||
-          loc.code.toLowerCase().includes(q);
-      });
+        if (filtered.length === 0) {
+          const noRes = document.createElement("div");
+          noRes.className = "no-results";
+          noRes.textContent = "No results found";
+          listContainer.appendChild(noRes);
+          return;
+        }
 
-      if (filtered.length === 0) {
-        const noRes = document.createElement("div");
-        noRes.className = "no-results";
-        noRes.textContent = "No results found";
-        listContainer.appendChild(noRes);
-        return;
-      }
+        filtered.forEach(cur => {
+          const item = document.createElement("div");
+          item.className = "option-item";
+          item.setAttribute("role", "option");
+          item.setAttribute("aria-selected", cur.code === currentCurrency ? "true" : "false");
+          if (cur.code === currentCurrency) item.classList.add("selected");
 
-      filtered.forEach(loc => {
-        const item = document.createElement("div");
-        item.className = "option-item";
-        item.setAttribute("role", "option");
-        item.setAttribute("aria-selected", loc.code === currentCode ? "true" : "false");
-        if (loc.code === currentCode) item.classList.add("selected");
+          item.innerHTML = `
+                <div style="display:flex;align-items:center;gap:6px;flex:1;overflow:hidden;">
+                    <span style="font-size:14px;font-weight:600;flex-shrink:0;min-width:20px;text-align:center;">${cur.symbol}</span>
+                    <span style="font-weight:500;flex-shrink:0;">${cur.code}</span>
+                    <span style="font-size:11px;color:var(--text-tertiary);text-overflow:ellipsis;overflow:hidden;white-space:nowrap;">${cur.name}</span>
+                </div>
+                ${cur.code === currentCurrency ? '<svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+            `;
 
-        const nativeName = loc.languages && loc.languages.length > 0 ? loc.languages[0] : "";
+          item.addEventListener("click", (e) => {
+            e.stopPropagation();
+            localeRows[rowIdx].currency = cur.code;
+            menu.classList.remove("open");
+            renderLocaleRows();
+            saveLocalesToStorage();
+          });
 
-        item.innerHTML = `
+          listContainer.appendChild(item);
+        });
+      } else {
+        // --- LOCALE OPTIONS ---
+        // Filter locales - exclude already selected (except current)
+        const otherSelectedCodes = localeRows
+          .filter((r, i) => i !== rowIdx && r.code)
+          .map(r => r.code);
+
+        const filtered = LOCALES.filter(loc => {
+          if (otherSelectedCodes.includes(loc.code)) return false;
+          if (!q) return true;
+          return loc.label.toLowerCase().includes(q) ||
+            loc.languages.some(Native => Native.toLowerCase().includes(q)) ||
+            loc.code.toLowerCase().includes(q);
+        });
+
+        if (filtered.length === 0) {
+          const noRes = document.createElement("div");
+          noRes.className = "no-results";
+          noRes.textContent = "No results found";
+          listContainer.appendChild(noRes);
+          return;
+        }
+
+        filtered.forEach(loc => {
+          const item = document.createElement("div");
+          item.className = "option-item";
+          item.setAttribute("role", "option");
+          item.setAttribute("aria-selected", loc.code === currentCode ? "true" : "false");
+          if (loc.code === currentCode) item.classList.add("selected");
+
+          const nativeName = loc.languages && loc.languages.length > 0 ? loc.languages[0] : "";
+
+          item.innerHTML = `
                 <div style="display:flex;align-items:center;gap:6px;flex:1;overflow:hidden;">
                     <span style="font-size:16px;flex-shrink:0;">${loc.flag}</span>
                     <span style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap;">${loc.label}</span>
@@ -1730,17 +1789,21 @@
                 ${loc.code === currentCode ? '<svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
             `;
 
-        item.addEventListener("click", (e) => {
-          e.stopPropagation();
-          localeRows[rowIdx].code = loc.code;
-          menu.classList.remove("open");
-          renderLocaleRows();
-          updateGenerateButton();
-          saveLocalesToStorage();
-        });
+          item.addEventListener("click", (e) => {
+            e.stopPropagation();
+            localeRows[rowIdx].code = loc.code;
+            // Auto-set default currency from locale metadata
+            const defaultCurrency = loc.currencies && loc.currencies.length > 0 ? loc.currencies[0] : null;
+            localeRows[rowIdx].currency = defaultCurrency;
+            menu.classList.remove("open");
+            renderLocaleRows();
+            updateGenerateButton();
+            saveLocalesToStorage();
+          });
 
-        listContainer.appendChild(item);
-      });
+          listContainer.appendChild(item);
+        });
+      }
     }
 
     function closeAllDropdowns() {
@@ -1752,9 +1815,9 @@
 
     // P2.2: Save locale selections to plugin storage whenever they change
     function saveLocalesToStorage() {
-      const codes = localeRows.filter(r => r.code).map(r => r.code);
+      const data = localeRows.filter(r => r.code).map(r => ({ code: r.code, currency: r.currency || null }));
       parent.postMessage({
-        pluginMessage: { type: "save-locales", locales: codes }
+        pluginMessage: { type: "save-locales", locales: data }
       }, "*");
     }
 
@@ -1975,7 +2038,7 @@
 
       if (response.status === 429) {
         const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || "Daily limit reached (25/day). Please try again tomorrow.");
+        throw new Error(errData.error || "Daily limit reached (50/day). Please try again tomorrow.");
       }
 
       if (!response.ok) {
@@ -2079,7 +2142,13 @@
       // P2.2: Restore saved locales on launch
       if (msg.type === "restore-locales") {
         if (Array.isArray(msg.locales) && msg.locales.length > 0) {
-          localeRows = msg.locales.map(code => ({ uid: uid(), code: code || "", currency: null }));
+          localeRows = msg.locales.map(entry => {
+            // Support both old format (string code) and new format ({ code, currency })
+            if (typeof entry === "string") {
+              return { uid: uid(), code: entry || "", currency: null };
+            }
+            return { uid: uid(), code: entry.code || "", currency: entry.currency || null };
+          });
           if (selectedFrame) {
             renderLocaleRows();
             updateGenerateButton();
