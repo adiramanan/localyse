@@ -9,6 +9,16 @@ figma.ui.postMessage({
   userId: figma.currentUser?.id || "anonymous",
 });
 
+// P2.2: Send saved locales to the UI on launch
+(async () => {
+  try {
+    const savedLocales = await figma.clientStorage.getAsync("savedLocales");
+    if (Array.isArray(savedLocales) && savedLocales.length > 0) {
+      figma.ui.postMessage({ type: "restore-locales", locales: savedLocales });
+    }
+  } catch { /* first launch or storage unavailable */ }
+})();
+
 // ------------------------------------------------------------------
 // Helpers
 // ------------------------------------------------------------------
@@ -105,6 +115,23 @@ function extractTextLayers(frame: SceneNode) {
   }));
 }
 
+/** Convert a Uint8Array to a base64 string (no btoa in Figma sandbox). */
+function uint8ArrayToBase64(bytes: Uint8Array): string {
+  const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  let result = "";
+  const len = bytes.length;
+  for (let i = 0; i < len; i += 3) {
+    const a = bytes[i];
+    const b = i + 1 < len ? bytes[i + 1] : 0;
+    const c = i + 2 < len ? bytes[i + 2] : 0;
+    result += CHARS[a >> 2];
+    result += CHARS[((a & 3) << 4) | (b >> 4)];
+    result += i + 1 < len ? CHARS[((b & 15) << 2) | (c >> 6)] : "=";
+    result += i + 2 < len ? CHARS[c & 63] : "=";
+  }
+  return result;
+}
+
 /** Export a node as a PNG thumbnail (scale 1×, max 800 px wide). */
 async function exportFrameImage(node: SceneNode): Promise<Uint8Array> {
   const scale = Math.min(1, 800 / node.width);
@@ -135,8 +162,16 @@ async function handleSelectionChange() {
   ) {
     const node = sel[0];
 
-    // Export image
-    const imageBytes = await exportFrameImage(node);
+    // Export image — with error handling (P1.4)
+    let imageBase64 = "";
+    try {
+      const imageBytes = await exportFrameImage(node);
+      // Convert to base64 for more efficient postMessage transfer (P3.2)
+      imageBase64 = uint8ArrayToBase64(imageBytes);
+    } catch (err) {
+      console.error(`[Localyse] Frame export failed: ${err}`);
+      // Continue with empty image — UI will show a placeholder
+    }
 
     // Bail if selection changed while we were exporting
     if (gen !== selectionGeneration) return;
@@ -152,7 +187,7 @@ async function handleSelectionChange() {
         name: node.name,
         width: Math.round(node.width),
         height: Math.round(node.height),
-        imageBytes: Array.from(imageBytes),
+        imageBase64,
         textLayers,
       },
     });
@@ -248,6 +283,25 @@ figma.ui.onmessage = async (msg) => {
         layerMap.set(layer.id, layer.translated);
       }
 
+      // P3.1: Batch font loading — collect all unique fonts first, load in parallel
+      const fontsToLoad = new Set<string>();
+      for (let i = 0; i < cloneTextNodes.length; i++) {
+        const cloneText = cloneTextNodes[i];
+        if (cloneText.characters.length === 0) continue;
+        try {
+          const fonts = cloneText.getRangeAllFontNames(0, cloneText.characters.length);
+          for (const font of fonts) {
+            fontsToLoad.add(JSON.stringify(font));
+          }
+        } catch { /* ignore — will be caught below */ }
+      }
+      // Load all unique fonts in parallel
+      await Promise.all(
+        Array.from(fontsToLoad).map((key) =>
+          figma.loadFontAsync(JSON.parse(key) as FontName).catch(() => {})
+        )
+      );
+
       // Match clone text nodes by index (clone preserves tree structure/order)
       for (let i = 0; i < sourceTextNodes.length && i < cloneTextNodes.length; i++) {
         const originalId = sourceTextNodes[i].id;
@@ -256,21 +310,13 @@ figma.ui.onmessage = async (msg) => {
         const cloneText = cloneTextNodes[i];
         const newText = layerMap.get(originalId)!;
 
-        // Skip empty text nodes — getRangeAllFontNames(0, 0) would throw
+        // Skip empty text nodes
         if (cloneText.characters.length === 0) continue;
 
         try {
-          // Load every font used in this text node before mutating
-          const fontsToLoad = cloneText.getRangeAllFontNames(
-            0,
-            cloneText.characters.length
-          );
-          for (const font of fontsToLoad) {
-            await figma.loadFontAsync(font);
-          }
           cloneText.characters = newText;
         } catch (err) {
-          // If a specific font can't be loaded, skip this layer but continue
+          // If text can't be set, skip this layer but continue
           console.error(
             `[Localyse] Could not set text for "${cloneText.name}": ${err}`
           );
@@ -294,6 +340,53 @@ figma.ui.onmessage = async (msg) => {
     if (Number.isFinite(w) && Number.isFinite(h) && w > 0 && h > 0 && w <= 2000 && h <= 2000) {
       figma.ui.resize(w, h);
     }
+  }
+
+  // --- Save locales to client storage (P2.2) ---
+  if (msg.type === "save-locales") {
+    if (Array.isArray(msg.locales)) {
+      figma.clientStorage.setAsync("savedLocales", msg.locales).catch(() => {});
+    }
+  }
+
+  // --- Locale presets (P6.5) ---
+  if (msg.type === "save-preset") {
+    const { name, locales } = msg;
+    if (typeof name === "string" && Array.isArray(locales)) {
+      figma.clientStorage.getAsync("localePresets").then((presets: any) => {
+        const all = Array.isArray(presets) ? presets : [];
+        // Replace existing preset with same name, or add new
+        const idx = all.findIndex((p: any) => p.name === name);
+        if (idx >= 0) {
+          all[idx] = { name, locales };
+        } else {
+          all.push({ name, locales });
+        }
+        figma.clientStorage.setAsync("localePresets", all).catch(() => {});
+        figma.ui.postMessage({ type: "presets-updated", presets: all });
+      }).catch(() => {});
+    }
+  }
+
+  if (msg.type === "delete-preset") {
+    const { name } = msg;
+    figma.clientStorage.getAsync("localePresets").then((presets: any) => {
+      const all = Array.isArray(presets) ? presets : [];
+      const filtered = all.filter((p: any) => p.name !== name);
+      figma.clientStorage.setAsync("localePresets", filtered).catch(() => {});
+      figma.ui.postMessage({ type: "presets-updated", presets: filtered });
+    }).catch(() => {});
+  }
+
+  if (msg.type === "load-presets") {
+    figma.clientStorage.getAsync("localePresets").then((presets: any) => {
+      figma.ui.postMessage({
+        type: "presets-updated",
+        presets: Array.isArray(presets) ? presets : [],
+      });
+    }).catch(() => {
+      figma.ui.postMessage({ type: "presets-updated", presets: [] });
+    });
   }
 
   // --- Close plugin ---

@@ -28,19 +28,53 @@ const AZURE_ENDPOINT = "https://api.cognitive.microsofttranslator.com/translate"
 const AZURE_API_VERSION = "3.0";
 
 // ──────────────────────────────────────────────────────────────────────
+// Security & validation constants
+// ──────────────────────────────────────────────────────────────────────
+const MAX_PAYLOAD_BYTES = 102400;   // 100 KB
+const MAX_TEXT_LAYERS = 500;
+const MAX_TEXT_LENGTH = 5000;       // per layer, in characters
+const IP_DAILY_LIMIT = 100;         // secondary IP-based limit (more generous for shared IPs)
+const LLM_CHUNK_SIZE = 40;          // max layers per LLM refinement call
+
+// ──────────────────────────────────────────────────────────────────────
 // Rate limiting
 // ──────────────────────────────────────────────────────────────────────
 
-async function checkRateLimit(env, userId) {
-    const key = `rate:${userId}`;
-    const current = parseInt(await env.RATE_LIMIT.get(key)) || 0;
+/**
+ * Dual rate limiting: per-user (primary) + per-IP (secondary defense).
+ *
+ * Note: KV get-then-put is not atomic, so two concurrent requests could
+ * both pass the check. This is acceptable for a 25/day soft limit — at
+ * worst a user gets 1-2 extra requests in a race.
+ */
+async function checkRateLimit(env, userId, ipAddress) {
+    // --- Per-user limit ---
+    const userKey = `rate:${userId}`;
+    const userCurrent = parseInt(await env.RATE_LIMIT.get(userKey)) || 0;
 
-    if (current >= DAILY_LIMIT) {
+    if (userCurrent >= DAILY_LIMIT) {
         return { allowed: false, remaining: 0 };
     }
 
-    await env.RATE_LIMIT.put(key, String(current + 1), { expirationTtl: DAY_IN_SECONDS });
-    return { allowed: true, remaining: DAILY_LIMIT - current - 1 };
+    // --- Per-IP secondary limit (catches spoofed user IDs) ---
+    if (ipAddress) {
+        const ipKey = `rate:ip:${ipAddress}`;
+        const ipCurrent = parseInt(await env.RATE_LIMIT.get(ipKey)) || 0;
+
+        if (ipCurrent >= IP_DAILY_LIMIT) {
+            return { allowed: false, remaining: 0 };
+        }
+
+        // Increment both counters in parallel
+        await Promise.all([
+            env.RATE_LIMIT.put(userKey, String(userCurrent + 1), { expirationTtl: DAY_IN_SECONDS }),
+            env.RATE_LIMIT.put(ipKey, String(ipCurrent + 1), { expirationTtl: DAY_IN_SECONDS }),
+        ]);
+    } else {
+        await env.RATE_LIMIT.put(userKey, String(userCurrent + 1), { expirationTtl: DAY_IN_SECONDS });
+    }
+
+    return { allowed: true, remaining: DAILY_LIMIT - userCurrent - 1 };
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -200,11 +234,32 @@ const OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions";
  * If OPENAI_API_KEY is not set, this gracefully returns the
  * original Azure translations unchanged.
  */
+/**
+ * Refine translations via LLM, with automatic chunking for large frames.
+ * Splits layers into chunks of LLM_CHUNK_SIZE to avoid exceeding
+ * GPT-4o-mini's context window or max output tokens.
+ */
 async function refineWithLLM(env, textLayers, azureResults, targetLocale, localeLabel, localeCurrencies) {
     // Skip if no OpenAI key configured — Azure results are used as-is
     if (!env.OPENAI_API_KEY) return azureResults;
 
-    // Build a compact prompt with original text + Azure translation
+    // Process in chunks to avoid context/output token limits
+    if (azureResults.length <= LLM_CHUNK_SIZE) {
+        return await refineChunkWithLLM(env, textLayers, azureResults, targetLocale, localeLabel, localeCurrencies);
+    }
+
+    const allResults = [];
+    for (let i = 0; i < azureResults.length; i += LLM_CHUNK_SIZE) {
+        const chunkAzure = azureResults.slice(i, i + LLM_CHUNK_SIZE);
+        const chunkLayers = textLayers.slice(i, i + LLM_CHUNK_SIZE);
+        const chunkResults = await refineChunkWithLLM(env, chunkLayers, chunkAzure, targetLocale, localeLabel, localeCurrencies);
+        allResults.push(...chunkResults);
+    }
+    return allResults;
+}
+
+/** Refine a single chunk of translations via GPT-4o-mini. */
+async function refineChunkWithLLM(env, textLayers, azureResults, targetLocale, localeLabel, localeCurrencies) {
     const pairs = azureResults.map((r, i) => ({
         id: r.id,
         layerName: textLayers[i]?.layerName || "",
@@ -250,7 +305,6 @@ IMPORTANT: Return ONLY a JSON array with objects { "id": "...", "translated": ".
         });
 
         if (!response.ok) {
-            // LLM refinement failed — return Azure translations as fallback
             console.error(`OpenAI refinement error (${response.status})`);
             return azureResults;
         }
@@ -259,21 +313,24 @@ IMPORTANT: Return ONLY a JSON array with objects { "id": "...", "translated": ".
         const content = data.choices?.[0]?.message?.content?.trim();
         if (!content) return azureResults;
 
-        // Parse the LLM output
         let refined;
         try {
-            // Strip markdown code fences if present
             const cleaned = content.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
             refined = JSON.parse(cleaned);
         } catch {
-            // Parsing failed — return Azure translations as fallback
             console.error("Failed to parse LLM refinement output");
             return azureResults;
         }
 
         if (!Array.isArray(refined)) return azureResults;
 
-        // Merge LLM refinements back by ID
+        // Validate: ensure we got the expected number of results
+        // (guards against truncated output)
+        if (refined.length < azureResults.length * 0.5) {
+            console.error(`LLM returned ${refined.length}/${azureResults.length} results — possible truncation, using Azure fallback`);
+            return azureResults;
+        }
+
         const refinedMap = new Map();
         for (const r of refined) {
             if (r.id && typeof r.translated === "string") {
@@ -286,7 +343,6 @@ IMPORTANT: Return ONLY a JSON array with objects { "id": "...", "translated": ".
             translated: refinedMap.get(r.id) || r.translated,
         }));
     } catch (err) {
-        // Network or other error — return Azure translations as fallback
         console.error("LLM refinement failed:", err.message);
         return azureResults;
     }
@@ -294,6 +350,9 @@ IMPORTANT: Return ONLY a JSON array with objects { "id": "...", "translated": ".
 
 // ──────────────────────────────────────────────────────────────────────
 // Privacy policy
+// NOTE: Canonical source is worker/privacy.html. This inline copy is
+// used because Cloudflare Workers (module format) cannot import text
+// files without a bundler. If you update the policy, update both files.
 // ──────────────────────────────────────────────────────────────────────
 
 const PRIVACY_POLICY_HTML = `<!DOCTYPE html>
@@ -390,6 +449,36 @@ const PRIVACY_POLICY_HTML = `<!DOCTYPE html>
 </html>`;
 
 // ──────────────────────────────────────────────────────────────────────
+// Translation caching (uses KV with 1-hour TTL)
+// ──────────────────────────────────────────────────────────────────────
+
+const CACHE_TTL = 3600; // 1 hour
+
+/** Generate a deterministic cache key from input text + target locale. */
+async function makeCacheKey(textLayers, targetLocale) {
+    const input = JSON.stringify({ texts: textLayers.map(l => l.text), locale: targetLocale });
+    const encoded = new TextEncoder().encode(input);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    return `cache:${targetLocale}:${hashHex.slice(0, 24)}`;
+}
+
+async function getCachedTranslation(env, cacheKey) {
+    try {
+        const cached = await env.RATE_LIMIT.get(cacheKey);
+        if (cached) return JSON.parse(cached);
+    } catch { /* cache miss */ }
+    return null;
+}
+
+async function setCachedTranslation(env, cacheKey, data) {
+    try {
+        await env.RATE_LIMIT.put(cacheKey, JSON.stringify(data), { expirationTtl: CACHE_TTL });
+    } catch { /* non-critical, ignore */ }
+}
+
+// ──────────────────────────────────────────────────────────────────────
 // Main handler
 // ──────────────────────────────────────────────────────────────────────
 
@@ -423,9 +512,10 @@ export default {
             );
         }
 
-        // Rate limiting — get user ID from header
+        // Rate limiting — get user ID from header + IP for secondary defense
         const userId = request.headers.get("X-User-Id") || "anonymous";
-        const rateCheck = await checkRateLimit(env, userId);
+        const ipAddress = request.headers.get("CF-Connecting-IP") || "";
+        const rateCheck = await checkRateLimit(env, userId, ipAddress);
 
         if (!rateCheck.allowed) {
             return Response.json(
@@ -444,6 +534,15 @@ export default {
         }
 
         try {
+            // --- Payload size guard ---
+            const contentLength = parseInt(request.headers.get("Content-Length") || "0");
+            if (contentLength > MAX_PAYLOAD_BYTES) {
+                return Response.json(
+                    { error: `Payload too large (max ${MAX_PAYLOAD_BYTES / 1024}KB).` },
+                    { status: 413, headers: CORS_HEADERS }
+                );
+            }
+
             const { textLayers, targetLocale, localeLabel, localeCurrencies } = await request.json();
 
             if (!textLayers || !Array.isArray(textLayers) || !targetLocale) {
@@ -451,6 +550,36 @@ export default {
                     { error: "Invalid request. Expected { textLayers, targetLocale }." },
                     { status: 400, headers: CORS_HEADERS }
                 );
+            }
+
+            // --- Input validation: layer count and text length ---
+            if (textLayers.length > MAX_TEXT_LAYERS) {
+                return Response.json(
+                    { error: `Too many text layers (max ${MAX_TEXT_LAYERS}).` },
+                    { status: 400, headers: CORS_HEADERS }
+                );
+            }
+            for (const layer of textLayers) {
+                if (typeof layer.text === "string" && layer.text.length > MAX_TEXT_LENGTH) {
+                    return Response.json(
+                        { error: `Text layer "${(layer.layerName || "").slice(0, 30)}" exceeds max length (${MAX_TEXT_LENGTH} chars).` },
+                        { status: 400, headers: CORS_HEADERS }
+                    );
+                }
+            }
+
+            // --- Check translation cache ---
+            const cacheKey = await makeCacheKey(textLayers, targetLocale);
+            const cached = await getCachedTranslation(env, cacheKey);
+            if (cached) {
+                return Response.json(cached, {
+                    status: 200,
+                    headers: {
+                        ...CORS_HEADERS,
+                        "X-RateLimit-Remaining": String(rateCheck.remaining),
+                        "X-Cache": "HIT",
+                    },
+                });
             }
 
             // For same-language variants (e.g. en-US → en-IN), skip Azure
@@ -472,6 +601,9 @@ export default {
             // Contextual refinement via LLM (currency, dates, naturalness)
             // Skipped gracefully if OPENAI_API_KEY is not configured
             const translations = await refineWithLLM(env, textLayers, azureTranslations, targetLocale, localeLabel, localeCurrencies);
+
+            // --- Store in cache for future identical requests ---
+            await setCachedTranslation(env, cacheKey, translations);
 
             return Response.json(translations, {
                 status: 200,

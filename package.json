@@ -4,12 +4,22 @@
   "description": "Figma plugin to localise design frames into multiple locales using AI-powered translation",
   "scripts": {
     "build": "tsc",
-    "watch": "tsc --watch"
+    "watch": "tsc --watch",
+    "lint": "eslint . --ext .ts,.js --ignore-path .gitignore",
+    "format": "prettier --write '**/*.{ts,js,json,html,css}'",
+    "format:check": "prettier --check '**/*.{ts,js,json,html,css}'",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "devDependencies": {
     "@figma/plugin-typings": "^1.100.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.3.0",
     "puppeteer": "^24.37.2",
-    "typescript": "^5.4.0"
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
   },
   "license": "MIT"
 }

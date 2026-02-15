@@ -746,7 +746,8 @@
       color: var(--text-primary);
     }
 
-    .option-item:hover {
+    .option-item:hover,
+    .option-item.highlighted {
       background: var(--bg-secondary);
     }
 
@@ -776,6 +777,65 @@
       text-align: center;
       color: var(--text-secondary);
       font-size: 12px;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  PRESET BAR (P6.5)                                                  */
+    /* ------------------------------------------------------------------ */
+    .preset-bar {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .preset-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      font-size: 11px;
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition);
+      white-space: nowrap;
+    }
+
+    .preset-chip:hover {
+      background: var(--accent-light);
+      border-color: var(--accent);
+    }
+
+    .preset-chip .preset-delete {
+      font-size: 10px;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      margin-left: 2px;
+    }
+
+    .preset-chip .preset-delete:hover {
+      color: var(--danger);
+    }
+
+    .preset-save-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: transparent;
+      border: 1px dashed var(--border);
+      font-size: 11px;
+      color: var(--accent);
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+
+    .preset-save-btn:hover {
+      background: var(--accent-light);
     }
 
     /* Scrollbar for options */
@@ -1220,7 +1280,10 @@
     let isSuccess = false;
     let successInfo = null;     // { count, locales: [{flag, label}] }
     let translationResults = null; // array of { locale, localeMeta, layers:[{id,original,translated}] }
+    let appliedLocaleCodes = new Set(); // P6.4: track already-applied locales for incremental translation
     let figmaUserId = "anonymous"; // received from plugin sandbox for rate limiting
+    let rateLimitRemaining = null; // P2.1: track remaining daily quota
+    let localePresets = []; // P6.5: saved locale presets [{name, locales:[code]}]
 
     // ==================================================================
     // DOM REFS
@@ -1242,18 +1305,31 @@
 
     const $footer = document.getElementById("footer");
 
+    // Attach click handler to the initial HTML button
+    $generateBtn.addEventListener("click", () => startGeneration());
+
     // ==================================================================
     // UTILITY
     // ==================================================================
     let uidCounter = 0;
     function uid() { return "lr-" + (++uidCounter); }
 
+    // P2.5: Prevent toast stacking — track current toast
+    let currentToast = null;
     function showToast(message, type = "error") {
+      if (currentToast) {
+        currentToast.remove();
+        currentToast = null;
+      }
       const el = document.createElement("div");
       el.className = "toast " + type;
       el.textContent = message;
       document.body.appendChild(el);
-      setTimeout(() => el.remove(), 4000);
+      currentToast = el;
+      setTimeout(() => {
+        if (currentToast === el) currentToast = null;
+        el.remove();
+      }, 4000);
     }
 
     const PRIVACY_URL = "https://localyse-proxy.adiramanan98.workers.dev/privacy";
@@ -1320,14 +1396,29 @@
       }
 
       $mainContent.classList.remove("hidden");
-      $stepIndicator.textContent = "Configure locales";
-
-      // Frame preview — revoke previous blob URL to prevent memory leak
-      if ($frameImage.src && $frameImage.src.startsWith("blob:")) {
-        URL.revokeObjectURL($frameImage.src);
+      // P2.1: Show rate limit info in header when available
+      if (rateLimitRemaining !== null && rateLimitRemaining <= 5) {
+        $stepIndicator.textContent = "Configure locales (" + rateLimitRemaining + " left today)";
+        $stepIndicator.style.color = rateLimitRemaining <= 2 ? "var(--danger)" : "";
+      } else {
+        $stepIndicator.textContent = "Configure locales";
+        $stepIndicator.style.color = "";
       }
-      const blob = new Blob([new Uint8Array(selectedFrame.imageBytes)], { type: "image/png" });
-      $frameImage.src = URL.createObjectURL(blob);
+
+      // Frame preview — use base64 data URL (P3.2: more efficient than array transfer)
+      if (selectedFrame.imageBase64) {
+        $frameImage.src = "data:image/png;base64," + selectedFrame.imageBase64;
+      } else if (selectedFrame.imageBytes) {
+        // Fallback for legacy format
+        if ($frameImage.src && $frameImage.src.startsWith("blob:")) {
+          URL.revokeObjectURL($frameImage.src);
+        }
+        const blob = new Blob([new Uint8Array(selectedFrame.imageBytes)], { type: "image/png" });
+        $frameImage.src = URL.createObjectURL(blob);
+      } else {
+        $frameImage.src = "";
+        $frameImage.alt = "Preview unavailable";
+      }
       $frameName.textContent = selectedFrame.name;
       $frameDim.textContent = selectedFrame.width + " × " + selectedFrame.height;
 
@@ -1340,8 +1431,73 @@
       }
     }
 
+    // P6.5: Render the preset bar above locale rows
+    function renderPresetBar() {
+      let bar = document.getElementById("presetBar");
+      if (!bar) {
+        bar = document.createElement("div");
+        bar.id = "presetBar";
+        bar.className = "preset-bar";
+        $localeList.parentNode.insertBefore(bar, $localeList);
+      }
+      bar.innerHTML = "";
+
+      // Only show if there are presets or locales to save
+      if (localePresets.length === 0 && !localeRows.some(r => r.code)) {
+        bar.classList.add("hidden");
+        return;
+      }
+      bar.classList.remove("hidden");
+
+      // Render each preset as a clickable chip
+      localePresets.forEach(preset => {
+        const chip = document.createElement("span");
+        chip.className = "preset-chip";
+        chip.title = "Load: " + preset.locales.join(", ");
+
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = preset.name;
+        chip.appendChild(nameSpan);
+
+        const del = document.createElement("span");
+        del.className = "preset-delete";
+        del.textContent = "\u00D7";
+        del.title = "Delete preset";
+        del.addEventListener("click", (e) => {
+          e.stopPropagation();
+          parent.postMessage({ pluginMessage: { type: "delete-preset", name: preset.name } }, "*");
+        });
+        chip.appendChild(del);
+
+        chip.addEventListener("click", () => {
+          // Load this preset's locales
+          localeRows = preset.locales.map(code => ({ uid: uid(), code, currency: null }));
+          renderLocaleRows();
+          updateGenerateButton();
+          saveLocalesToStorage();
+        });
+
+        bar.appendChild(chip);
+      });
+
+      // "Save preset" button if there are selected locales
+      if (localeRows.some(r => r.code)) {
+        const saveBtn = document.createElement("button");
+        saveBtn.className = "preset-save-btn";
+        saveBtn.textContent = "+ Save preset";
+        saveBtn.addEventListener("click", () => {
+          const name = prompt("Preset name:");
+          if (!name || !name.trim()) return;
+          const codes = localeRows.filter(r => r.code).map(r => r.code);
+          parent.postMessage({ pluginMessage: { type: "save-preset", name: name.trim(), locales: codes } }, "*");
+        });
+        bar.appendChild(saveBtn);
+      }
+    }
+
     function renderLocaleRows() {
       $localeList.innerHTML = "";
+      renderPresetBar();
       localeRows.forEach((row, idx) => {
         const el = document.createElement("div");
         el.className = "locale-row fade-in";
@@ -1384,6 +1540,7 @@
           localeRows.splice(idx, 1);
           renderLocaleRows();
           updateGenerateButton();
+          saveLocalesToStorage();
         });
 
         const rowContainer = document.createElement("div");
@@ -1474,6 +1631,57 @@
         renderOptions(list, searchInput.value, row.code, idx, menu);
       });
 
+      // P2.4: Keyboard navigation for the dropdown
+      searchInput.addEventListener("keydown", (e) => {
+        const items = list.querySelectorAll(".option-item:not(.disabled)");
+        if (items.length === 0) return;
+
+        let highlighted = list.querySelector(".option-item.highlighted");
+        let currentIdx = highlighted ? Array.from(items).indexOf(highlighted) : -1;
+
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          if (highlighted) highlighted.classList.remove("highlighted");
+          currentIdx = (currentIdx + 1) % items.length;
+          items[currentIdx].classList.add("highlighted");
+          items[currentIdx].scrollIntoView({ block: "nearest" });
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          if (highlighted) highlighted.classList.remove("highlighted");
+          currentIdx = currentIdx <= 0 ? items.length - 1 : currentIdx - 1;
+          items[currentIdx].classList.add("highlighted");
+          items[currentIdx].scrollIntoView({ block: "nearest" });
+        } else if (e.key === "Enter") {
+          e.preventDefault();
+          if (highlighted) highlighted.click();
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          menu.classList.remove("open");
+          trigger.focus();
+        }
+      });
+
+      // ARIA attributes for accessibility (P2.4)
+      trigger.setAttribute("role", "combobox");
+      trigger.setAttribute("aria-expanded", "false");
+      trigger.setAttribute("aria-haspopup", "listbox");
+      trigger.tabIndex = 0;
+      list.setAttribute("role", "listbox");
+
+      // Update aria-expanded when menu opens/closes
+      const observer = new MutationObserver(() => {
+        trigger.setAttribute("aria-expanded", menu.classList.contains("open") ? "true" : "false");
+      });
+      observer.observe(menu, { attributes: true, attributeFilter: ["class"] });
+
+      // Allow trigger to open via keyboard
+      trigger.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+          e.preventDefault();
+          trigger.click();
+        }
+      });
+
       wrap.appendChild(trigger);
       wrap.appendChild(menu);
       container.appendChild(wrap);
@@ -1507,6 +1715,8 @@
       filtered.forEach(loc => {
         const item = document.createElement("div");
         item.className = "option-item";
+        item.setAttribute("role", "option");
+        item.setAttribute("aria-selected", loc.code === currentCode ? "true" : "false");
         if (loc.code === currentCode) item.classList.add("selected");
 
         const nativeName = loc.languages && loc.languages.length > 0 ? loc.languages[0] : "";
@@ -1526,6 +1736,7 @@
           menu.classList.remove("open");
           renderLocaleRows();
           updateGenerateButton();
+          saveLocalesToStorage();
         });
 
         listContainer.appendChild(item);
@@ -1539,21 +1750,34 @@
     // Close on click outside
     document.addEventListener("click", () => closeAllDropdowns());
 
+    // P2.2: Save locale selections to plugin storage whenever they change
+    function saveLocalesToStorage() {
+      const codes = localeRows.filter(r => r.code).map(r => r.code);
+      parent.postMessage({
+        pluginMessage: { type: "save-locales", locales: codes }
+      }, "*");
+    }
 
+
+    // P4.2: Keep footer elements persistent — just toggle disabled state
     function updateGenerateButton() {
       const hasLocales = localeRows.some(r => r.code);
       const hasFrame = !!selectedFrame;
-      $generateBtn.disabled = !(hasFrame && hasLocales);
+      const enabled = hasFrame && hasLocales;
 
-      $footer.innerHTML = '';
-      const btn = document.createElement("button");
-      btn.className = "btn-primary";
-      btn.id = "generateBtn";
-      btn.disabled = !(hasFrame && hasLocales);
-      btn.textContent = "Generate Translations";
-      btn.addEventListener("click", startGeneration);
-      $footer.appendChild(btn);
-      appendPrivacyLink();
+      // Ensure footer has the generate button (create once if missing)
+      let btn = document.getElementById("generateBtn");
+      if (!btn || !$footer.contains(btn)) {
+        $footer.innerHTML = '';
+        btn = document.createElement("button");
+        btn.className = "btn-primary";
+        btn.id = "generateBtn";
+        btn.textContent = "Generate Translations";
+        btn.addEventListener("click", startGeneration);
+        $footer.appendChild(btn);
+        appendPrivacyLink();
+      }
+      btn.disabled = !enabled;
     }
 
     function renderResults() {
@@ -1598,9 +1822,21 @@
           arrowSpan.className = "translation-arrow";
           arrowSpan.textContent = "\u2192";
 
+          // P2.3: Make translated text editable
           const transSpan = document.createElement("span");
           transSpan.className = "translation-translated";
           transSpan.textContent = layer.translated;
+          transSpan.contentEditable = "true";
+          transSpan.style.cursor = "text";
+          transSpan.style.borderBottom = "1px dashed var(--border)";
+          transSpan.style.outline = "none";
+          transSpan.style.minWidth = "40px";
+          transSpan.addEventListener("blur", () => {
+            layer.translated = transSpan.textContent || "";
+          });
+          transSpan.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") { e.preventDefault(); transSpan.blur(); }
+          });
 
           row.appendChild(origSpan);
           row.appendChild(arrowSpan);
@@ -1617,17 +1853,6 @@
         card.appendChild(body);
         $resultsSection.appendChild(card);
       });
-    }
-
-    /** Escape HTML for both element content and attribute values. */
-    function escHtml(s) {
-      if (typeof s !== "string") return "";
-      return s
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
     }
 
     // ==================================================================
@@ -1662,6 +1887,13 @@
         return;
       }
 
+      // P6.4: Filter out already-applied locales for incremental translation
+      const newLocales = selectedLocales.filter(loc => !appliedLocaleCodes.has(loc.code));
+      if (newLocales.length === 0 && selectedLocales.length > 0) {
+        showToast("All selected locales have already been applied. Add a new locale or select a different frame.", "error");
+        return;
+      }
+
       if (!selectedFrame || !selectedFrame.textLayers || selectedFrame.textLayers.length === 0) {
         showToast("The selected frame has no text layers to translate.");
         return;
@@ -1671,11 +1903,13 @@
       translationResults = null;
       renderView();
 
+      // P6.4: Use newLocales (skips already-applied) for the actual translation
+      const localesToTranslate = newLocales.length > 0 ? newLocales : selectedLocales;
       let appliedCount = 0;
       try {
-        for (let i = 0; i < selectedLocales.length; i++) {
-          const loc = selectedLocales[i];
-          const pct = Math.round(((i) / selectedLocales.length) * 100);
+        for (let i = 0; i < localesToTranslate.length; i++) {
+          const loc = localesToTranslate[i];
+          const pct = Math.round(((i) / localesToTranslate.length) * 100);
           $genStatus.textContent = "Translating to " + loc.meta.label + "…";
           $genProgress.style.width = pct + "%";
 
@@ -1688,6 +1922,7 @@
 
           // Apply this locale to canvas immediately
           applyOneLocale(loc.meta.label, loc.code, translated);
+          appliedLocaleCodes.add(loc.code); // P6.4: track applied locale
           appliedCount++;
           $genStatus.textContent = loc.meta.flag + " " + loc.meta.label + " applied!";
         }
@@ -1700,7 +1935,7 @@
         isSuccess = true;
         successInfo = {
           count: appliedCount,
-          locales: selectedLocales.map(loc => ({ flag: loc.meta.flag, label: loc.meta.label })),
+          locales: localesToTranslate.map(loc => ({ flag: loc.meta.flag, label: loc.meta.label })),
         };
         renderView();
 
@@ -1754,6 +1989,12 @@
         throw new Error("Translation error: " + errSummary);
       }
 
+      // P2.1: Capture rate limit remaining from response header
+      const remaining = response.headers.get("X-RateLimit-Remaining");
+      if (remaining !== null) {
+        rateLimitRemaining = parseInt(remaining);
+      }
+
       const translatedArray = await response.json();
 
       if (!Array.isArray(translatedArray)) {
@@ -1799,6 +2040,7 @@
       isSuccess = false;
       successInfo = null;
       translationResults = null;
+      appliedLocaleCodes.clear(); // P6.4: allow re-translation after startOver
       renderView();
     }
 
@@ -1813,6 +2055,7 @@
       if (msg.type === "frame-selected") {
         selectedFrame = msg.payload;
         translationResults = null;
+        appliedLocaleCodes.clear(); // P6.4: reset when frame changes
         ensureAtLeastOneLocale();
         renderView();
       }
@@ -1827,6 +2070,23 @@
         figmaUserId = msg.userId || "anonymous";
       }
 
+      // P6.5: Handle presets update from storage
+      if (msg.type === "presets-updated") {
+        localePresets = Array.isArray(msg.presets) ? msg.presets : [];
+        renderPresetBar();
+      }
+
+      // P2.2: Restore saved locales on launch
+      if (msg.type === "restore-locales") {
+        if (Array.isArray(msg.locales) && msg.locales.length > 0) {
+          localeRows = msg.locales.map(code => ({ uid: uid(), code: code || "", currency: null }));
+          if (selectedFrame) {
+            renderLocaleRows();
+            updateGenerateButton();
+          }
+        }
+      }
+
       if (msg.type === "apply-done") {
         showToast("Localised frames created on canvas!", "success");
       }
@@ -1837,11 +2097,23 @@
     // ==================================================================
     renderView();
 
-    // Detect Figma dark theme
-    if (document.documentElement.dataset.figmaTheme === "dark" ||
-      window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      document.documentElement.classList.add("figma-dark");
+    // P6.5: Request saved presets from plugin storage on init
+    parent.postMessage({ pluginMessage: { type: "load-presets" } }, "*");
+
+    // P4.4: Robust dark theme detection with live updates
+    function applyTheme() {
+      const isDark = document.documentElement.dataset.figmaTheme === "dark" ||
+        window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.classList.toggle("figma-dark", isDark);
     }
+    applyTheme();
+
+    // Watch for Figma theme attribute changes
+    new MutationObserver(applyTheme).observe(document.documentElement, {
+      attributes: true, attributeFilter: ["data-figma-theme"]
+    });
+    // Watch for OS-level theme changes
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
   </script>
 </body>
 
