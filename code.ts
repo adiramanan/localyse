@@ -204,19 +204,19 @@ handleSelectionChange();
 // Messages from the UI
 // ------------------------------------------------------------------
 
+// RTL locale prefixes — languages that read right-to-left
+const RTL_CODES = ["ar", "he", "fa", "ur", "ps", "yi", "sd", "ku"];
+
+function isRtlLocale(code: string): boolean {
+  if (!code) return false;
+  const base = code.split("-")[0].toLowerCase();
+  return RTL_CODES.includes(base);
+}
+
 figma.ui.onmessage = async (msg) => {
   // --- Apply translations to duplicated frames ---
   if (msg.type === "apply-translations") {
     const { sourceFrameId, translations } = msg;
-
-    // RTL locale prefixes — languages that read right-to-left
-    const RTL_CODES = ["ar", "he", "fa", "ur", "ps", "yi", "sd", "ku"];
-
-    function isRtlLocale(code: string): boolean {
-      if (!code) return false;
-      const base = code.split("-")[0].toLowerCase();
-      return RTL_CODES.includes(base);
-    }
 
     // --- Input validation ---
     if (typeof sourceFrameId !== "string" || !Array.isArray(translations)) {
