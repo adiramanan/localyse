@@ -1,7 +1,7 @@
 // Localyse — Figma Plugin Main Code
 // Runs in the Figma sandbox (no DOM, no fetch)
 
-figma.showUI(__html__, { width: 480, height: 640, themeColors: true });
+figma.showUI(__html__, { width: 480, height: 800, themeColors: true });
 
 // Send the current user's ID to the UI for rate-limiting identification
 figma.ui.postMessage({

@@ -630,6 +630,167 @@
     .privacy-link:hover {
       color: var(--text-secondary);
     }
+
+    /* ------------------------------------------------------------------ */
+    /*  CUSTOM DROPDOWN                                                   */
+    /* ------------------------------------------------------------------ */
+    .custom-select-wrap {
+      position: relative;
+      width: 100%;
+    }
+
+    .helper-text {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 4px;
+    }
+
+    .dropdown-section-title {
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+
+    .custom-select-trigger {
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 13px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    .custom-select-trigger:focus,
+    .custom-select-trigger.active {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-light);
+    }
+
+    .custom-select-trigger .placeholder {
+      color: var(--text-tertiary);
+    }
+
+    .custom-dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      max-height: 240px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      margin-top: 4px;
+      z-index: 100;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .custom-dropdown-menu.open {
+      display: flex;
+      animation: fadeIn .15s ease both;
+    }
+
+    .search-input-wrap {
+      padding: 8px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-secondary);
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 6px 8px;
+      font-size: 12px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg);
+      color: var(--text-primary);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .options-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px 0;
+    }
+
+    .option-item {
+      padding: 6px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-primary);
+    }
+
+    .option-item:hover {
+      background: var(--bg-secondary);
+    }
+
+    .option-item.selected {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .option-item.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .option-item .check {
+      margin-left: auto;
+      opacity: 0;
+      color: var(--accent);
+    }
+
+    .option-item.selected .check {
+      opacity: 1;
+    }
+
+    .no-results {
+      padding: 12px;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    /* Scrollbar for options */
+    .options-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .options-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .options-list::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
   </style>
 </head>
 
@@ -742,86 +903,312 @@
       { code: "af-ZA", azureCode: "af", label: "Afrikaans (South Africa)", flag: "🇿🇦", languages: ["Afrikaans"], currencies: ["ZAR"] },
       { code: "am-ET", azureCode: "am", label: "Amharic (Ethiopia)", flag: "🇪🇹", languages: ["Amharic"], currencies: ["ETB"] },
       { code: "ar-SA", azureCode: "ar", label: "Arabic (Saudi Arabia)", flag: "🇸🇦", languages: ["Arabic"], currencies: ["SAR"] },
+      { code: "as-IN", azureCode: "as", label: "Assamese (India)", flag: "🇮🇳", languages: ["Assamese"], currencies: ["INR"] },
       { code: "az-AZ", azureCode: "az", label: "Azerbaijani (Azerbaijan)", flag: "🇦🇿", languages: ["Azerbaijani"], currencies: ["AZN"] },
+      { code: "ba-RU", azureCode: "ba", label: "Bashkir (Russia)", flag: "🇷🇺", languages: ["Bashkir"], currencies: ["RUB"] },
+      { code: "be-BY", azureCode: "be", label: "Belarusian (Belarus)", flag: "🇧🇾", languages: ["Belarusian"], currencies: ["BYN"] },
       { code: "bg-BG", azureCode: "bg", label: "Bulgarian (Bulgaria)", flag: "🇧🇬", languages: ["Bulgarian"], currencies: ["BGN"] },
+      { code: "bho-IN", azureCode: "bho", label: "Bhojpuri (India)", flag: "🇮🇳", languages: ["Bhojpuri"], currencies: ["INR"] },
       { code: "bn-BD", azureCode: "bn", label: "Bengali (Bangladesh)", flag: "🇧🇩", languages: ["Bengali"], currencies: ["BDT"] },
+      { code: "bo-CN", azureCode: "bo", label: "Tibetan (China)", flag: "🇨🇳", languages: ["Tibetan"], currencies: ["CNY"] },
+      { code: "brx-IN", azureCode: "brx", label: "Bodo (India)", flag: "🇮🇳", languages: ["Bodo"], currencies: ["INR"] },
       { code: "bs-BA", azureCode: "bs", label: "Bosnian (Bosnia)", flag: "🇧🇦", languages: ["Bosnian"], currencies: ["BAM"] },
       { code: "ca-ES", azureCode: "ca", label: "Catalan (Spain)", flag: "🇪🇸", languages: ["Catalan"], currencies: ["EUR"] },
       { code: "cs-CZ", azureCode: "cs", label: "Czech (Czechia)", flag: "🇨🇿", languages: ["Czech"], currencies: ["CZK"] },
-      { code: "cy-GB", azureCode: "cy", label: "Welsh (United Kingdom)", flag: "🏴\u200d☠️", languages: ["Welsh"], currencies: ["GBP"] },
+      { code: "cy-GB", azureCode: "cy", label: "Welsh (United Kingdom)", flag: "🏴󠁧󠁢󠁷󠁬󠁳󠁿", languages: ["Welsh"], currencies: ["GBP"] },
       { code: "da-DK", azureCode: "da", label: "Danish (Denmark)", flag: "🇩🇰", languages: ["Danish"], currencies: ["DKK"] },
       { code: "de-AT", azureCode: "de", label: "German (Austria)", flag: "🇦🇹", languages: ["German"], currencies: ["EUR"] },
-      { code: "de-CH", azureCode: "de", label: "German (Switzerland)", flag: "🇨🇭", languages: ["German", "French", "Italian"], currencies: ["CHF"] },
+      { code: "de-CH", azureCode: "de", label: "German (Switzerland)", flag: "🇨🇭", languages: ["German"], currencies: ["CHF"] },
       { code: "de-DE", azureCode: "de", label: "German (Germany)", flag: "🇩🇪", languages: ["German"], currencies: ["EUR"] },
+      { code: "doi-IN", azureCode: "doi", label: "Dogri (India)", flag: "🇮🇳", languages: ["Dogri"], currencies: ["INR"] },
+      { code: "dsb-DE", azureCode: "dsb", label: "Lower Sorbian (Germany)", flag: "🇩🇪", languages: ["Lower Sorbian"], currencies: ["EUR"] },
+      { code: "dv-MV", azureCode: "dv", label: "Divehi (Maldives)", flag: "🇲🇻", languages: ["Divehi"], currencies: ["MVR"] },
       { code: "el-GR", azureCode: "el", label: "Greek (Greece)", flag: "🇬🇷", languages: ["Greek"], currencies: ["EUR"] },
       { code: "en-AU", azureCode: "en", label: "English (Australia)", flag: "🇦🇺", languages: ["English"], currencies: ["AUD"] },
-      { code: "en-CA", azureCode: "en", label: "English (Canada)", flag: "🇨🇦", languages: ["English", "French"], currencies: ["CAD"] },
+      { code: "en-CA", azureCode: "en", label: "English (Canada)", flag: "🇨🇦", languages: ["English"], currencies: ["CAD"] },
       { code: "en-GB", azureCode: "en", label: "English (United Kingdom)", flag: "🇬🇧", languages: ["English"], currencies: ["GBP"] },
-      { code: "en-IN", azureCode: "en", label: "English (India)", flag: "🇮🇳", languages: ["English", "Hindi"], currencies: ["INR"] },
+      { code: "en-IN", azureCode: "en", label: "English (India)", flag: "🇮🇳", languages: ["English"], currencies: ["INR"] },
       { code: "en-US", azureCode: "en", label: "English (United States)", flag: "🇺🇸", languages: ["English"], currencies: ["USD"] },
       { code: "es-AR", azureCode: "es", label: "Spanish (Argentina)", flag: "🇦🇷", languages: ["Spanish"], currencies: ["ARS"] },
-      { code: "es-ES", azureCode: "es", label: "Spanish (Spain)", flag: "🇪🇸", languages: ["Spanish", "Catalan", "Galician", "Basque"], currencies: ["EUR"] },
+      { code: "es-ES", azureCode: "es", label: "Spanish (Spain)", flag: "🇪🇸", languages: ["Spanish"], currencies: ["EUR"] },
       { code: "es-MX", azureCode: "es", label: "Spanish (Mexico)", flag: "🇲🇽", languages: ["Spanish"], currencies: ["MXN"] },
       { code: "et-EE", azureCode: "et", label: "Estonian (Estonia)", flag: "🇪🇪", languages: ["Estonian"], currencies: ["EUR"] },
+      { code: "eu-ES", azureCode: "eu", label: "Basque", flag: "🇪🇸", languages: ["Basque"], currencies: ["EUR"] },
       { code: "fa-IR", azureCode: "fa", label: "Persian (Iran)", flag: "🇮🇷", languages: ["Persian"], currencies: ["IRR"] },
-      { code: "fi-FI", azureCode: "fi", label: "Finnish (Finland)", flag: "🇫🇮", languages: ["Finnish", "Swedish"], currencies: ["EUR"] },
-      { code: "fil-PH", azureCode: "fil", label: "Filipino (Philippines)", flag: "🇵🇭", languages: ["Filipino", "English"], currencies: ["PHP"] },
-      { code: "fr-CA", azureCode: "fr-ca", label: "French (Canada)", flag: "🇨🇦", languages: ["French", "English"], currencies: ["CAD"] },
+      { code: "fi-FI", azureCode: "fi", label: "Finnish (Finland)", flag: "🇫🇮", languages: ["Finnish"], currencies: ["EUR"] },
+      { code: "fil-PH", azureCode: "fil", label: "Filipino (Philippines)", flag: "🇵🇭", languages: ["Filipino"], currencies: ["PHP"] },
+      { code: "fj-FJ", azureCode: "fj", label: "Fijian", flag: "🇫🇯", languages: ["Fijian"], currencies: ["FJD"] },
+      { code: "fo-FO", azureCode: "fo", label: "Faroese", flag: "🇫🇴", languages: ["Faroese"], currencies: ["DKK"] },
+      { code: "fr-CA", azureCode: "fr-ca", label: "French (Canada)", flag: "🇨🇦", languages: ["French"], currencies: ["CAD"] },
       { code: "fr-FR", azureCode: "fr", label: "French (France)", flag: "🇫🇷", languages: ["French"], currencies: ["EUR"] },
-      { code: "ga-IE", azureCode: "ga", label: "Irish (Ireland)", flag: "🇮🇪", languages: ["Irish", "English"], currencies: ["EUR"] },
+      { code: "ga-IE", azureCode: "ga", label: "Irish (Ireland)", flag: "🇮🇪", languages: ["Irish"], currencies: ["EUR"] },
+      { code: "gl-ES", azureCode: "gl", label: "Galician", flag: "🇪🇸", languages: ["Galician"], currencies: ["EUR"] },
+      { code: "gom-IN", azureCode: "gom", label: "Konkani", flag: "🇮🇳", languages: ["Konkani"], currencies: ["INR"] },
       { code: "gu-IN", azureCode: "gu", label: "Gujarati (India)", flag: "🇮🇳", languages: ["Gujarati"], currencies: ["INR"] },
+      { code: "ha-NG", azureCode: "ha", label: "Hausa", flag: "🇳🇬", languages: ["Hausa"], currencies: ["NGN"] },
       { code: "he-IL", azureCode: "he", label: "Hebrew (Israel)", flag: "🇮🇱", languages: ["Hebrew"], currencies: ["ILS"] },
-      { code: "hi-IN", azureCode: "hi", label: "Hindi (India)", flag: "🇮🇳", languages: ["Hindi", "English"], currencies: ["INR"] },
+      { code: "hi-IN", azureCode: "hi", label: "Hindi (India)", flag: "🇮🇳", languages: ["Hindi"], currencies: ["INR"] },
+      { code: "hne-IN", azureCode: "hne", label: "Chhattisgarhi", flag: "🇮🇳", languages: ["Chhattisgarhi"], currencies: ["INR"] },
       { code: "hr-HR", azureCode: "hr", label: "Croatian (Croatia)", flag: "🇭🇷", languages: ["Croatian"], currencies: ["EUR"] },
+      { code: "hsb-DE", azureCode: "hsb", label: "Upper Sorbian", flag: "🇩🇪", languages: ["Upper Sorbian"], currencies: ["EUR"] },
+      { code: "ht-HT", azureCode: "ht", label: "Haitian Creole", flag: "🇭🇹", languages: ["Haitian Creole"], currencies: ["HTG"] },
       { code: "hu-HU", azureCode: "hu", label: "Hungarian (Hungary)", flag: "🇭🇺", languages: ["Hungarian"], currencies: ["HUF"] },
       { code: "hy-AM", azureCode: "hy", label: "Armenian (Armenia)", flag: "🇦🇲", languages: ["Armenian"], currencies: ["AMD"] },
       { code: "id-ID", azureCode: "id", label: "Indonesian (Indonesia)", flag: "🇮🇩", languages: ["Indonesian"], currencies: ["IDR"] },
+      { code: "ig-NG", azureCode: "ig", label: "Igbo", flag: "🇳🇬", languages: ["Igbo"], currencies: ["NGN"] },
+      { code: "ikt-CA", azureCode: "ikt", label: "Inuinnaqtun", flag: "🇨🇦", languages: ["Inuinnaqtun"], currencies: ["CAD"] },
       { code: "is-IS", azureCode: "is", label: "Icelandic (Iceland)", flag: "🇮🇸", languages: ["Icelandic"], currencies: ["ISK"] },
       { code: "it-IT", azureCode: "it", label: "Italian (Italy)", flag: "🇮🇹", languages: ["Italian"], currencies: ["EUR"] },
+      { code: "iu-CA", azureCode: "iu", label: "Inuktitut", flag: "🇨🇦", languages: ["Inuktitut"], currencies: ["CAD"] },
+      { code: "iu-Latn-CA", azureCode: "iu-Latn", label: "Inuktitut (Latin)", flag: "🇨🇦", languages: ["Inuktitut"], currencies: ["CAD"] },
       { code: "ja-JP", azureCode: "ja", label: "Japanese (Japan)", flag: "🇯🇵", languages: ["Japanese"], currencies: ["JPY"] },
       { code: "ka-GE", azureCode: "ka", label: "Georgian (Georgia)", flag: "🇬🇪", languages: ["Georgian"], currencies: ["GEL"] },
-      { code: "kk-KZ", azureCode: "kk", label: "Kazakh (Kazakhstan)", flag: "🇰🇿", languages: ["Kazakh", "Russian"], currencies: ["KZT"] },
+      { code: "kk-KZ", azureCode: "kk", label: "Kazakh (Kazakhstan)", flag: "🇰🇿", languages: ["Kazakh"], currencies: ["KZT"] },
       { code: "km-KH", azureCode: "km", label: "Khmer (Cambodia)", flag: "🇰🇭", languages: ["Khmer"], currencies: ["KHR"] },
+      { code: "kmr-IQ", azureCode: "kmr", label: "Kurdish (Northern)", flag: "🇮🇶", languages: ["Kurdish"], currencies: ["IQD"] },
       { code: "kn-IN", azureCode: "kn", label: "Kannada (India)", flag: "🇮🇳", languages: ["Kannada"], currencies: ["INR"] },
       { code: "ko-KR", azureCode: "ko", label: "Korean (South Korea)", flag: "🇰🇷", languages: ["Korean"], currencies: ["KRW"] },
+      { code: "ks-IN", azureCode: "ks", label: "Kashmiri", flag: "🇮🇳", languages: ["Kashmiri"], currencies: ["INR"] },
+      { code: "ku-IQ", azureCode: "ku", label: "Kurdish (Central)", flag: "🇮🇶", languages: ["Kurdish"], currencies: ["IQD"] },
+      { code: "ky-KG", azureCode: "ky", label: "Kyrgyz", flag: "🇰🇬", languages: ["Kyrgyz"], currencies: ["KGS"] },
+      { code: "lb-LU", azureCode: "lb", label: "Luxembourgish", flag: "🇱🇺", languages: ["Luxembourgish"], currencies: ["EUR"] },
+      { code: "ln-CD", azureCode: "ln", label: "Lingala", flag: "🇨🇩", languages: ["Lingala"], currencies: ["CDF"] },
       { code: "lo-LA", azureCode: "lo", label: "Lao (Laos)", flag: "🇱🇦", languages: ["Lao"], currencies: ["LAK"] },
       { code: "lt-LT", azureCode: "lt", label: "Lithuanian (Lithuania)", flag: "🇱🇹", languages: ["Lithuanian"], currencies: ["EUR"] },
+      { code: "lug-UG", azureCode: "lug", label: "Ganda", flag: "🇺🇬", languages: ["Ganda"], currencies: ["UGX"] },
       { code: "lv-LV", azureCode: "lv", label: "Latvian (Latvia)", flag: "🇱🇻", languages: ["Latvian"], currencies: ["EUR"] },
+      { code: "lzh-CN", azureCode: "lzh", label: "Chinese (Literary)", flag: "🇨🇳", languages: ["Chinese"], currencies: ["CNY"] },
+      { code: "mai-IN", azureCode: "mai", label: "Maithili", flag: "🇮🇳", languages: ["Maithili"], currencies: ["INR"] },
+      { code: "mg-MG", azureCode: "mg", label: "Malagasy", flag: "🇲🇬", languages: ["Malagasy"], currencies: ["MGA"] },
+      { code: "mi-NZ", azureCode: "mi", label: "Māori", flag: "🇳🇿", languages: ["Māori"], currencies: ["NZD"] },
       { code: "mk-MK", azureCode: "mk", label: "Macedonian (North Macedonia)", flag: "🇲🇰", languages: ["Macedonian"], currencies: ["MKD"] },
       { code: "ml-IN", azureCode: "ml", label: "Malayalam (India)", flag: "🇮🇳", languages: ["Malayalam"], currencies: ["INR"] },
       { code: "mn-MN", azureCode: "mn-Cyrl", label: "Mongolian (Mongolia)", flag: "🇲🇳", languages: ["Mongolian"], currencies: ["MNT"] },
+      { code: "mn-Mong-CN", azureCode: "mn-Mong", label: "Mongolian (Traditional)", flag: "🇨🇳", languages: ["Mongolian"], currencies: ["CNY"] },
+      { code: "mni-IN", azureCode: "mni", label: "Manipuri", flag: "🇮🇳", languages: ["Manipuri"], currencies: ["INR"] },
       { code: "mr-IN", azureCode: "mr", label: "Marathi (India)", flag: "🇮🇳", languages: ["Marathi"], currencies: ["INR"] },
-      { code: "ms-MY", azureCode: "ms", label: "Malay (Malaysia)", flag: "🇲🇾", languages: ["Malay", "English"], currencies: ["MYR"] },
-      { code: "mt-MT", azureCode: "mt", label: "Maltese (Malta)", flag: "🇲🇹", languages: ["Maltese", "English"], currencies: ["EUR"] },
+      { code: "ms-MY", azureCode: "ms", label: "Malay (Malaysia)", flag: "🇲🇾", languages: ["Malay"], currencies: ["MYR"] },
+      { code: "mt-MT", azureCode: "mt", label: "Maltese (Malta)", flag: "🇲🇹", languages: ["Maltese"], currencies: ["EUR"] },
+      { code: "mww-US", azureCode: "mww", label: "Hmong Daw", flag: "🇺🇸", languages: ["Hmong Daw"], currencies: ["USD"] },
       { code: "my-MM", azureCode: "my", label: "Myanmar (Myanmar)", flag: "🇲🇲", languages: ["Burmese"], currencies: ["MMK"] },
       { code: "nb-NO", azureCode: "nb", label: "Norwegian Bokmål (Norway)", flag: "🇳🇴", languages: ["Norwegian Bokmål"], currencies: ["NOK"] },
       { code: "ne-NP", azureCode: "ne", label: "Nepali (Nepal)", flag: "🇳🇵", languages: ["Nepali"], currencies: ["NPR"] },
       { code: "nl-NL", azureCode: "nl", label: "Dutch (Netherlands)", flag: "🇳🇱", languages: ["Dutch"], currencies: ["EUR"] },
+      { code: "nso-ZA", azureCode: "nso", label: "Sesotho sa Leboa", flag: "🇿🇦", languages: ["Sesotho sa Leboa"], currencies: ["ZAR"] },
+      { code: "nya-MW", azureCode: "nya", label: "Nyanja", flag: "🇲🇼", languages: ["Nyanja"], currencies: ["MWK"] },
+      { code: "or-IN", azureCode: "or", label: "Odia", flag: "🇮🇳", languages: ["Odia"], currencies: ["INR"] },
+      { code: "otq-MX", azureCode: "otq", label: "Querétaro Otomi", flag: "🇲🇽", languages: ["Querétaro Otomi"], currencies: ["MXN"] },
       { code: "pa-IN", azureCode: "pa", label: "Punjabi (India)", flag: "🇮🇳", languages: ["Punjabi"], currencies: ["INR"] },
       { code: "pl-PL", azureCode: "pl", label: "Polish (Poland)", flag: "🇵🇱", languages: ["Polish"], currencies: ["PLN"] },
+      { code: "prs-AF", azureCode: "prs", label: "Dari", flag: "🇦🇫", languages: ["Dari"], currencies: ["AFN"] },
       { code: "ps-AF", azureCode: "ps", label: "Pashto (Afghanistan)", flag: "🇦🇫", languages: ["Pashto"], currencies: ["AFN"] },
-      { code: "pt-BR", azureCode: "pt-br", label: "Portuguese (Brazil)", flag: "🇧🇷", languages: ["Portuguese"], currencies: ["BRL"] },
-      { code: "pt-PT", azureCode: "pt-pt", label: "Portuguese (Portugal)", flag: "🇵🇹", languages: ["Portuguese"], currencies: ["EUR"] },
+      { code: "pt-BR", azureCode: "pt", label: "Portuguese (Brazil)", flag: "🇧🇷", languages: ["Portuguese"], currencies: ["BRL"] },
+      { code: "pt-PT", azureCode: "pt-PT", label: "Portuguese (Portugal)", flag: "🇵🇹", languages: ["Portuguese"], currencies: ["EUR"] },
       { code: "ro-RO", azureCode: "ro", label: "Romanian (Romania)", flag: "🇷🇴", languages: ["Romanian"], currencies: ["RON"] },
       { code: "ru-RU", azureCode: "ru", label: "Russian (Russia)", flag: "🇷🇺", languages: ["Russian"], currencies: ["RUB"] },
+      { code: "run-BI", azureCode: "run", label: "Rundi", flag: "🇧🇮", languages: ["Rundi"], currencies: ["BIF"] },
+      { code: "rw-RW", azureCode: "rw", label: "Kinyarwanda", flag: "🇷🇼", languages: ["Kinyarwanda"], currencies: ["RWF"] },
+      { code: "sd-PK", azureCode: "sd", label: "Sindhi", flag: "🇵🇰", languages: ["Sindhi"], currencies: ["PKR"] },
       { code: "si-LK", azureCode: "si", label: "Sinhala (Sri Lanka)", flag: "🇱🇰", languages: ["Sinhala"], currencies: ["LKR"] },
       { code: "sk-SK", azureCode: "sk", label: "Slovak (Slovakia)", flag: "🇸🇰", languages: ["Slovak"], currencies: ["EUR"] },
       { code: "sl-SI", azureCode: "sl", label: "Slovenian (Slovenia)", flag: "🇸🇮", languages: ["Slovenian"], currencies: ["EUR"] },
+      { code: "sm-WS", azureCode: "sm", label: "Samoan", flag: "🇼🇸", languages: ["Samoan"], currencies: ["WST"] },
+      { code: "sn-ZW", azureCode: "sn", label: "Shona", flag: "🇿🇼", languages: ["Shona"], currencies: ["USD"] },
+      { code: "so-SO", azureCode: "so", label: "Somali", flag: "🇸🇴", languages: ["Somali"], currencies: ["SOS"] },
       { code: "sq-AL", azureCode: "sq", label: "Albanian (Albania)", flag: "🇦🇱", languages: ["Albanian"], currencies: ["ALL"] },
-      { code: "sr-RS", azureCode: "sr-Latn", label: "Serbian (Serbia)", flag: "🇷🇸", languages: ["Serbian"], currencies: ["RSD"] },
+      { code: "sr-RS", azureCode: "sr-Latn", label: "Serbian (Latin)", flag: "🇷🇸", languages: ["Serbian"], currencies: ["RSD"] },
+      { code: "sr-Cyrl-RS", azureCode: "sr-Cyrl", label: "Serbian (Cyrillic)", flag: "🇷🇸", languages: ["Serbian"], currencies: ["RSD"] },
+      { code: "st-ZA", azureCode: "st", label: "Sesotho", flag: "🇿🇦", languages: ["Sesotho"], currencies: ["ZAR"] },
       { code: "sv-SE", azureCode: "sv", label: "Swedish (Sweden)", flag: "🇸🇪", languages: ["Swedish"], currencies: ["SEK"] },
-      { code: "sw-KE", azureCode: "sw", label: "Swahili (Kenya)", flag: "🇰🇪", languages: ["Swahili", "English"], currencies: ["KES"] },
+      { code: "sw-KE", azureCode: "sw", label: "Swahili (Kenya)", flag: "🇰🇪", languages: ["Swahili"], currencies: ["KES"] },
       { code: "ta-IN", azureCode: "ta", label: "Tamil (India)", flag: "🇮🇳", languages: ["Tamil"], currencies: ["INR"] },
       { code: "te-IN", azureCode: "te", label: "Telugu (India)", flag: "🇮🇳", languages: ["Telugu"], currencies: ["INR"] },
       { code: "th-TH", azureCode: "th", label: "Thai (Thailand)", flag: "🇹🇭", languages: ["Thai"], currencies: ["THB"] },
+      { code: "ti-ER", azureCode: "ti", label: "Tigrinya", flag: "🇪🇷", languages: ["Tigrinya"], currencies: ["ERN"] },
+      { code: "tk-TM", azureCode: "tk", label: "Turkmen", flag: "🇹🇲", languages: ["Turkmen"], currencies: ["TMT"] },
+      { code: "tlh-Latn", azureCode: "tlh-Latn", label: "Klingon (Latin)", flag: "🏴", languages: ["Klingon"], currencies: [] },
+      { code: "tlh-Piqd", azureCode: "tlh-Piqd", label: "Klingon (pIqaD)", flag: "🏴", languages: ["Klingon"], currencies: [] },
+      { code: "tn-BW", azureCode: "tn", label: "Setswana", flag: "🇧🇼", languages: ["Setswana"], currencies: ["BWP"] },
+      { code: "to-TO", azureCode: "to", label: "Tongan", flag: "🇹🇴", languages: ["Tongan"], currencies: ["TOP"] },
       { code: "tr-TR", azureCode: "tr", label: "Turkish (Turkey)", flag: "🇹🇷", languages: ["Turkish"], currencies: ["TRY"] },
+      { code: "tt-RU", azureCode: "tt", label: "Tatar", flag: "🇷🇺", languages: ["Tatar"], currencies: ["RUB"] },
+      { code: "ty-PF", azureCode: "ty", label: "Tahitian", flag: "🇵🇫", languages: ["Tahitian"], currencies: ["XPF"] },
+      { code: "ug-CN", azureCode: "ug", label: "Uyghur", flag: "🇨🇳", languages: ["Uyghur"], currencies: ["CNY"] },
       { code: "uk-UA", azureCode: "uk", label: "Ukrainian (Ukraine)", flag: "🇺🇦", languages: ["Ukrainian"], currencies: ["UAH"] },
-      { code: "ur-PK", azureCode: "ur", label: "Urdu (Pakistan)", flag: "🇵🇰", languages: ["Urdu", "English"], currencies: ["PKR"] },
+      { code: "ur-PK", azureCode: "ur", label: "Urdu (Pakistan)", flag: "🇵🇰", languages: ["Urdu"], currencies: ["PKR"] },
       { code: "uz-UZ", azureCode: "uz", label: "Uzbek (Uzbekistan)", flag: "🇺🇿", languages: ["Uzbek"], currencies: ["UZS"] },
       { code: "vi-VN", azureCode: "vi", label: "Vietnamese (Vietnam)", flag: "🇻🇳", languages: ["Vietnamese"], currencies: ["VND"] },
+      { code: "xh-ZA", azureCode: "xh", label: "Xhosa", flag: "🇿🇦", languages: ["Xhosa"], currencies: ["ZAR"] },
+      { code: "yo-NG", azureCode: "yo", label: "Yoruba", flag: "🇳🇬", languages: ["Yoruba"], currencies: ["NGN"] },
+      { code: "yua-MX", azureCode: "yua", label: "Yucatec Maya", flag: "🇲🇽", languages: ["Yucatec Maya"], currencies: ["MXN"] },
+      { code: "yue-CN", azureCode: "yue", label: "Cantonese (Traditional)", flag: "🇭🇰", languages: ["Cantonese"], currencies: ["HKD"] },
       { code: "zh-CN", azureCode: "zh-Hans", label: "Chinese Simplified (China)", flag: "🇨🇳", languages: ["Chinese (Simplified)"], currencies: ["CNY"] },
       { code: "zh-TW", azureCode: "zh-Hant", label: "Chinese Traditional (Taiwan)", flag: "🇹🇼", languages: ["Chinese (Traditional)"], currencies: ["TWD"] },
-      { code: "zu-ZA", azureCode: "zu", label: "Zulu (South Africa)", flag: "🇿🇦", languages: ["Zulu", "English", "Afrikaans"], currencies: ["ZAR"] },
+      { code: "zu-ZA", azureCode: "zu", label: "Zulu (South Africa)", flag: "🇿🇦", languages: ["Zulu"], currencies: ["ZAR"] },
+    ];
+
+    // ==================================================================
+    // CURRENCIES
+    // ==================================================================
+    const CURRENCIES = [
+      // --- COMMON ---
+      { code: "USD", name: "US Dollar", symbol: "$" },
+      { code: "EUR", name: "Euro", symbol: "€" },
+      { code: "GBP", name: "British Pound", symbol: "£" },
+      { code: "CAD", name: "Canadian Dollar", symbol: "$" },
+      { code: "AUD", name: "Australian Dollar", symbol: "$" },
+      { code: "JPY", name: "Japanese Yen", symbol: "¥" },
+      { code: "CNY", name: "Chinese Yuan", symbol: "¥" },
+      { code: "INR", name: "Indian Rupee", symbol: "₹" },
+      { code: "AED", name: "United Arab Emirates Dirham", symbol: "د.إ" },
+      { code: "CHF", name: "Swiss Franc", symbol: "Fr" },
+      { code: "HKD", name: "Hong Kong Dollar", symbol: "$" },
+      { code: "SGD", name: "Singapore Dollar", symbol: "$" },
+      { code: "SEK", name: "Swedish Krona", symbol: "kr" },
+      { code: "KRW", name: "South Korean Won", symbol: "₩" },
+
+      // --- ALL OTHERS (Alphabetical) ---
+      { code: "AFN", name: "Afghan Afghani", symbol: "؋" },
+      { code: "ALL", name: "Albanian Lek", symbol: "L" },
+      { code: "AMD", name: "Armenian Dram", symbol: "֏" },
+      { code: "ANG", name: "Netherlands Antillean Guilder", symbol: "ƒ" },
+      { code: "AOA", name: "Angolan Kwanza", symbol: "Kz" },
+      { code: "ARS", name: "Argentine Peso", symbol: "$" },
+      { code: "AWG", name: "Aruban Florin", symbol: "ƒ" },
+      { code: "AZN", name: "Azerbaijani Manat", symbol: "₼" },
+      { code: "BAM", name: "Bosnia-Herzegovina Convertible Mark", symbol: "KM" },
+      { code: "BBD", name: "Barbadian Dollar", symbol: "$" },
+      { code: "BDT", name: "Bangladeshi Taka", symbol: "৳" },
+      { code: "BGN", name: "Bulgarian Lev", symbol: "лв" },
+      { code: "BHD", name: "Bahraini Dinar", symbol: ".د.ب" },
+      { code: "BIF", name: "Burundian Franc", symbol: "FBu" },
+      { code: "BMD", name: "Bermudan Dollar", symbol: "$" },
+      { code: "BND", name: "Brunei Dollar", symbol: "$" },
+      { code: "BOB", name: "Bolivian Boliviano", symbol: "Bs." },
+      { code: "BRL", name: "Brazilian Real", symbol: "R$" },
+      { code: "BSD", name: "Bahamian Dollar", symbol: "$" },
+      { code: "BTN", name: "Bhutanese Ngultrum", symbol: "Nu." },
+      { code: "BWP", name: "Botswana Pula", symbol: "P" },
+      { code: "BYN", name: "Belarusian Ruble", symbol: "Br" },
+      { code: "BZD", name: "Belize Dollar", symbol: "$" },
+      { code: "CDF", name: "Congolese Franc", symbol: "FC" },
+      { code: "CLP", name: "Chilean Peso", symbol: "$" },
+      { code: "COP", name: "Colombian Peso", symbol: "$" },
+      { code: "CRC", name: "Costa Rican Colón", symbol: "₡" },
+      { code: "CUP", name: "Cuban Peso", symbol: "$" },
+      { code: "CVE", name: "Cape Verdean Escudo", symbol: "$" },
+      { code: "CZK", name: "Czech Koruna", symbol: "Kč" },
+      { code: "DJF", name: "Djiboutian Franc", symbol: "Fdj" },
+      { code: "DKK", name: "Danish Krone", symbol: "kr" },
+      { code: "DOP", name: "Dominican Peso", symbol: "RD$" },
+      { code: "DZD", name: "Algerian Dinar", symbol: "د.ج" },
+      { code: "EGP", name: "Egyptian Pound", symbol: "£" },
+      { code: "ERN", name: "Eritrean Nakfa", symbol: "Nfk" },
+      { code: "ETB", name: "Ethiopian Birr", symbol: "Br" },
+      { code: "FJD", name: "Fijian Dollar", symbol: "$" },
+      { code: "FKP", name: "Falkland Islands Pound", symbol: "£" },
+      { code: "GEL", name: "Georgian Lari", symbol: "₾" },
+      { code: "GHS", name: "Ghanaian Cedi", symbol: "₵" },
+      { code: "GIP", name: "Gibraltar Pound", symbol: "£" },
+      { code: "GMD", name: "Gambian Dalasi", symbol: "D" },
+      { code: "GNF", name: "Guinean Franc", symbol: "FG" },
+      { code: "GTQ", name: "Guatemalan Quetzal", symbol: "Q" },
+      { code: "GYD", name: "Guyanaese Dollar", symbol: "$" },
+      { code: "HNL", name: "Honduran Lempira", symbol: "L" },
+      { code: "HRK", name: "Croatian Kuna", symbol: "kn" },
+      { code: "HTG", name: "Haitian Gourde", symbol: "G" },
+      { code: "HUF", name: "Hungarian Forint", symbol: "Ft" },
+      { code: "IDR", name: "Indonesian Rupiah", symbol: "Rp" },
+      { code: "ILS", name: "Israeli New Shekel", symbol: "₪" },
+      { code: "IQD", name: "Iraqi Dinar", symbol: "ع.د" },
+      { code: "IRR", name: "Iranian Rial", symbol: "﷼" },
+      { code: "ISK", name: "Icelandic Króna", symbol: "kr" },
+      { code: "JMD", name: "Jamaican Dollar", symbol: "J$" },
+      { code: "JOD", name: "Jordanian Dinar", symbol: "د.ا" },
+      { code: "KES", name: "Kenyan Shilling", symbol: "KSh" },
+      { code: "KGS", name: "Kyrgystani Som", symbol: "с" },
+      { code: "KHR", name: "Cambodian Riel", symbol: "៛" },
+      { code: "KMF", name: "Comorian Franc", symbol: "CF" },
+      { code: "KPW", name: "North Korean Won", symbol: "₩" },
+      { code: "KWD", name: "Kuwaiti Dinar", symbol: "د.ك" },
+      { code: "KYD", name: "Cayman Islands Dollar", symbol: "$" },
+      { code: "KZT", name: "Kazakhstani Tenge", symbol: "₸" },
+      { code: "LAK", name: "Laotian Kip", symbol: "₭" },
+      { code: "LBP", name: "Lebanese Pound", symbol: "ل.ل" },
+      { code: "LKR", name: "Sri Lankan Rupee", symbol: "Rs" },
+      { code: "LRD", name: "Liberian Dollar", symbol: "$" },
+      { code: "LSL", name: "Lesotho Loti", symbol: "L" },
+      { code: "LYD", name: "Libyan Dinar", symbol: "ل.د" },
+      { code: "MAD", name: "Moroccan Dirham", symbol: "د.م." },
+      { code: "MDL", name: "Moldovan Leu", symbol: "L" },
+      { code: "MGA", name: "Malagasy Ariary", symbol: "Ar" },
+      { code: "MKD", name: "Macedonian Denar", symbol: "ден" },
+      { code: "MMK", name: "Burmese Kyat", symbol: "K" },
+      { code: "MNT", name: "Mongolian Tugrik", symbol: "₮" },
+      { code: "MOP", name: "Macanese Pataca", symbol: "MOP$" },
+      { code: "MRU", name: "Mauritanian Ouguiya", symbol: "UM" },
+      { code: "MUR", name: "Mauritian Rupee", symbol: "₨" },
+      { code: "MVR", name: "Maldivian Rufiyaa", symbol: "Rf" },
+      { code: "MWK", name: "Malawian Kwacha", symbol: "MK" },
+      { code: "MXN", name: "Mexican Peso", symbol: "$" },
+      { code: "MYR", name: "Malaysian Ringgit", symbol: "RM" },
+      { code: "MZN", name: "Mozambican Metical", symbol: "MT" },
+      { code: "NAD", name: "Namibian Dollar", symbol: "$" },
+      { code: "NGN", name: "Nigerian Naira", symbol: "₦" },
+      { code: "NIO", name: "Nicaraguan Córdoba", symbol: "C$" },
+      { code: "NOK", name: "Norwegian Krone", symbol: "kr" },
+      { code: "NPR", name: "Nepalese Rupee", symbol: "₨" },
+      { code: "NZD", name: "New Zealand Dollar", symbol: "$" },
+      { code: "OMR", name: "Omani Rial", symbol: "ر.ع." },
+      { code: "PAB", name: "Panamanian Balboa", symbol: "B/." },
+      { code: "PEN", name: "Peruvian Sol", symbol: "S/." },
+      { code: "PGK", name: "Papua New Guinean Kina", symbol: "K" },
+      { code: "PHP", name: "Philippine Peso", symbol: "₱" },
+      { code: "PKR", name: "Pakistani Rupee", symbol: "₨" },
+      { code: "PLN", name: "Polish Zloty", symbol: "zł" },
+      { code: "PYG", name: "Paraguayan Guarani", symbol: "₲" },
+      { code: "QAR", name: "Qatari Riyal", symbol: "ر.ق" },
+      { code: "RON", name: "Romanian Leu", symbol: "lei" },
+      { code: "RSD", name: "Serbian Dinar", symbol: "дин." },
+      { code: "RUB", name: "Russian Ruble", symbol: "₽" },
+      { code: "RWF", name: "Rwandan Franc", symbol: "FRw" },
+      { code: "SAR", name: "Saudi Riyal", symbol: "ر.س" },
+      { code: "SBD", name: "Solomon Islands Dollar", symbol: "$" },
+      { code: "SCR", name: "Seychellois Rupee", symbol: "₨" },
+      { code: "SDG", name: "Sudanese Pound", symbol: "ج.س." },
+      { code: "SHP", name: "Saint Helena Pound", symbol: "£" },
+      { code: "SLL", name: "Sierra Leonean Leone", symbol: "Le" },
+      { code: "SOS", name: "Somali Shilling", symbol: "Sh" },
+      { code: "SRD", name: "Surinamese Dollar", symbol: "$" },
+      { code: "SSP", name: "South Sudanese Pound", symbol: "£" },
+      { code: "STN", name: "São Tomé and Príncipe Dobra", symbol: "Db" },
+      { code: "SYP", name: "Syrian Pound", symbol: "£" },
+      { code: "SZL", name: "Swazi Lilangeni", symbol: "L" },
+      { code: "THB", name: "Thai Baht", symbol: "฿" },
+      { code: "TJS", name: "Tajikistani Somoni", symbol: "SM" },
+      { code: "TMT", name: "Turkmenistani Manat", symbol: "T" },
+      { code: "TND", name: "Tunisian Dinar", symbol: "د.ت" },
+      { code: "TOP", name: "Tongan Pa'anga", symbol: "T$" },
+      { code: "TRY", name: "Turkish Lira", symbol: "₺" },
+      { code: "TTD", name: "Trinidad and Tobago Dollar", symbol: "TT$" },
+      { code: "TWD", name: "New Taiwan Dollar", symbol: "NT$" },
+      { code: "TZS", name: "Tanzanian Shilling", symbol: "Sh" },
+      { code: "UAH", name: "Ukrainian Hryvnia", symbol: "₴" },
+      { code: "UGX", name: "Ugandan Shilling", symbol: "USh" },
+      { code: "UYU", name: "Uruguayan Peso", symbol: "$U" },
+      { code: "UZS", name: "Uzbekistan Som", symbol: "so'm" },
+      { code: "VES", name: "Venezuelan Bolívar", symbol: "Bs.S" },
+      { code: "VND", name: "Vietnamese Dong", symbol: "₫" },
+      { code: "VUV", name: "Vanuatu Vatu", symbol: "VT" },
+      { code: "WST", name: "Samoan Tala", symbol: "T" },
+      { code: "XAF", name: "CFA Franc BEAC", symbol: "FCFA" },
+      { code: "XCD", name: "East Caribbean Dollar", symbol: "$" },
+      { code: "XOF", name: "CFA Franc BCEAO", symbol: "CFA" },
+      { code: "XPF", name: "CFP Franc", symbol: "₣" },
+      { code: "YER", name: "Yemeni Rial", symbol: "﷼" },
+      { code: "ZAR", name: "South African Rand", symbol: "R" },
+      { code: "ZMW", name: "Zambian Kwacha", symbol: "ZK" },
+      { code: "ZWL", name: "Zimbabwean Dollar", symbol: "$" }
     ];
 
     // ==================================================================
@@ -958,69 +1345,39 @@
       localeRows.forEach((row, idx) => {
         const el = document.createElement("div");
         el.className = "locale-row fade-in";
+        // Ensure z-index layering so top dropdowns go over bottom rows
+        el.style.zIndex = 100 - idx;
+        el.style.position = "relative";
 
-        const selWrap = document.createElement("div");
-        selWrap.className = "locale-select-wrap";
+        const rowContent = document.createElement("div");
+        rowContent.style.display = "flex";
+        rowContent.style.gap = "8px";
+        rowContent.style.alignItems = "flex-start";
+        rowContent.style.width = "100%";
 
-        const sel = document.createElement("select");
-        sel.className = "locale-select";
-        // Placeholder
-        const placeholder = document.createElement("option");
-        placeholder.value = "";
-        placeholder.textContent = "Choose a locale…";
-        placeholder.disabled = true;
-        if (!row.code) placeholder.selected = true;
-        sel.appendChild(placeholder);
+        // 1. Locale Dropdown (Larger width)
+        const localeWrap = document.createElement("div");
+        localeWrap.className = "locale-select-wrap";
+        localeWrap.style.flex = "2";
+        renderCustomDropdown(localeWrap, row, idx, "LOCALE");
 
-        // Already-chosen codes (to prevent duplicates)
-        const chosen = new Set(localeRows.filter((r, i) => i !== idx && r.code).map(r => r.code));
+        // 2. Currency Dropdown (Smaller width)
+        const currencyWrap = document.createElement("div");
+        currencyWrap.className = "locale-select-wrap";
+        currencyWrap.style.flex = "1";
+        renderCustomDropdown(currencyWrap, row, idx, "CURRENCY");
 
-        LOCALES.forEach(loc => {
-          const opt = document.createElement("option");
-          opt.value = loc.code;
-          opt.textContent = loc.flag + "  " + loc.label;
-          if (chosen.has(loc.code)) opt.disabled = true;
-          if (row.code === loc.code) opt.selected = true;
-          sel.appendChild(opt);
-        });
+        rowContent.appendChild(localeWrap);
+        rowContent.appendChild(currencyWrap);
 
-        sel.addEventListener("change", () => {
-          localeRows[idx].code = sel.value;
-          renderLocaleRows();
-          updateGenerateButton();
-        });
-
-        selWrap.appendChild(sel);
-
-        // Info line — built with safe DOM methods
-        if (row.code) {
-          const meta = LOCALES.find(l => l.code === row.code);
-          if (meta) {
-            const info = document.createElement("div");
-            info.className = "locale-info";
-            meta.languages.forEach(l => {
-              const tag = document.createElement("span");
-              tag.className = "tag";
-              tag.textContent = l;
-              info.appendChild(tag);
-            });
-            meta.currencies.forEach(c => {
-              const tag = document.createElement("span");
-              tag.className = "tag";
-              tag.style.background = "var(--accent-light)";
-              tag.style.color = "var(--accent)";
-              tag.textContent = c;
-              info.appendChild(tag);
-            });
-            selWrap.appendChild(info);
-          }
-        }
-
-        el.appendChild(selWrap);
+        // Info line (Only under Locale for now, or could span both)
+        // We can move info inside individual wrappers if we want specific info
+        // For now, let's keep it clean and maybe remove the old info line since we have explicit currency selection
 
         // Remove button
         const rmBtn = document.createElement("button");
         rmBtn.className = "locale-remove-btn";
+        rmBtn.style.marginTop = "10px"; // Align with input height
         rmBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg>';
         rmBtn.title = "Remove locale";
         rmBtn.addEventListener("click", () => {
@@ -1028,13 +1385,160 @@
           renderLocaleRows();
           updateGenerateButton();
         });
-        el.appendChild(rmBtn);
 
+        const rowContainer = document.createElement("div");
+        rowContainer.style.width = "100%";
+        rowContainer.appendChild(rowContent);
+
+        // Append old info line logic but lighter? 
+        // Actually, let's just show languages under the locale dropdown
+        // And currency logic is now explicit in the dropdown
+
+        if (row.code) {
+          const meta = LOCALES.find(l => l.code === row.code);
+          if (meta && meta.languages) {
+            const info = document.createElement("div");
+            info.className = "helper-text";
+            info.textContent = "Languages: " + meta.languages.join(", ");
+            // rowContainer.appendChild(info); // Optional: add back if needed
+          }
+        }
+
+        rowContent.appendChild(rmBtn);
+        el.appendChild(rowContainer);
         $localeList.appendChild(el);
       });
 
       $addLocaleBtn.disabled = localeRows.length >= 5;
     }
+
+    // ==================================================================
+    // CUSTOM DROPDOWN LOGIC
+    // ==================================================================
+
+    function renderCustomDropdown(container, row, idx, type) {
+      const wrap = document.createElement("div");
+      wrap.className = "custom-select-wrap";
+
+      // Trigger
+      const trigger = document.createElement("div");
+      trigger.className = "custom-select-trigger";
+
+      const selectedLocale = LOCALES.find(l => l.code === row.code);
+      if (selectedLocale) {
+        trigger.innerHTML = `<span style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px">${selectedLocale.flag}</span> ${selectedLocale.label}</span>`;
+        trigger.classList.add("active");
+      } else {
+        trigger.innerHTML = '<span class="placeholder">Choose a locale…</span>';
+      }
+
+      const arrow = document.createElement("span");
+      arrow.innerHTML = '<svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      trigger.appendChild(arrow);
+
+      // Dropdown Menu
+      const menu = document.createElement("div");
+      menu.className = "custom-dropdown-menu";
+
+      // Search
+      const searchWrap = document.createElement("div");
+      searchWrap.className = "search-input-wrap";
+      const searchInput = document.createElement("input");
+      searchInput.type = "text";
+      searchInput.className = "search-input";
+      searchInput.placeholder = "Search languages...";
+      searchInput.addEventListener("click", e => e.stopPropagation());
+      searchWrap.appendChild(searchInput);
+      menu.appendChild(searchWrap);
+
+      // Options List
+      const list = document.createElement("div");
+      list.className = "options-list";
+      menu.appendChild(list);
+
+      // Toggle Logic
+      trigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const wasOpen = menu.classList.contains("open");
+        closeAllDropdowns();
+        if (!wasOpen) {
+          menu.classList.add("open");
+          searchInput.value = "";
+          renderOptions(list, "", row.code, idx, menu);
+          setTimeout(() => searchInput.focus(), 50);
+        }
+      });
+
+      // Search Logic
+      searchInput.addEventListener("input", () => {
+        renderOptions(list, searchInput.value, row.code, idx, menu);
+      });
+
+      wrap.appendChild(trigger);
+      wrap.appendChild(menu);
+      container.appendChild(wrap);
+    }
+
+    function renderOptions(listContainer, query, currentCode, rowIdx, menu) {
+      listContainer.innerHTML = "";
+      const q = query.toLowerCase();
+
+      // Filter locales - exclude already selected (except current)
+      const otherSelectedCodes = localeRows
+        .filter((r, i) => i !== rowIdx && r.code)
+        .map(r => r.code);
+
+      const filtered = LOCALES.filter(loc => {
+        if (otherSelectedCodes.includes(loc.code)) return false;
+        if (!q) return true;
+        return loc.label.toLowerCase().includes(q) ||
+          loc.languages.some(Native => Native.toLowerCase().includes(q)) ||
+          loc.code.toLowerCase().includes(q);
+      });
+
+      if (filtered.length === 0) {
+        const noRes = document.createElement("div");
+        noRes.className = "no-results";
+        noRes.textContent = "No results found";
+        listContainer.appendChild(noRes);
+        return;
+      }
+
+      filtered.forEach(loc => {
+        const item = document.createElement("div");
+        item.className = "option-item";
+        if (loc.code === currentCode) item.classList.add("selected");
+
+        const nativeName = loc.languages && loc.languages.length > 0 ? loc.languages[0] : "";
+
+        item.innerHTML = `
+                <div style="display:flex;align-items:center;gap:6px;flex:1;overflow:hidden;">
+                    <span style="font-size:16px;flex-shrink:0;">${loc.flag}</span>
+                    <span style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap;">${loc.label}</span>
+                    ${nativeName ? `<span style="font-size:11px;color:var(--text-tertiary);margin-left:4px;flex-shrink:0;">${nativeName}</span>` : ''}
+                </div>
+                ${loc.code === currentCode ? '<svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+            `;
+
+        item.addEventListener("click", (e) => {
+          e.stopPropagation();
+          localeRows[rowIdx].code = loc.code;
+          menu.classList.remove("open");
+          renderLocaleRows();
+          updateGenerateButton();
+        });
+
+        listContainer.appendChild(item);
+      });
+    }
+
+    function closeAllDropdowns() {
+      document.querySelectorAll(".custom-dropdown-menu.open").forEach(el => el.classList.remove("open"));
+    }
+
+    // Close on click outside
+    document.addEventListener("click", () => closeAllDropdowns());
+
 
     function updateGenerateButton() {
       const hasLocales = localeRows.some(r => r.code);
@@ -1131,7 +1635,7 @@
     // ==================================================================
     $addLocaleBtn.addEventListener("click", () => {
       if (localeRows.length >= 5) return;
-      localeRows.push({ uid: uid(), code: "" });
+      localeRows.push({ uid: uid(), code: "", currency: null });
       renderLocaleRows();
       updateGenerateButton();
     });
@@ -1139,7 +1643,7 @@
     // Add one row by default when frame is selected
     function ensureAtLeastOneLocale() {
       if (localeRows.length === 0) {
-        localeRows.push({ uid: uid(), code: "" });
+        localeRows.push({ uid: uid(), code: "", currency: null });
       }
     }
 
@@ -1150,7 +1654,7 @@
     async function startGeneration() {
       const selectedLocales = localeRows.filter(r => r.code).map(r => {
         const meta = LOCALES.find(l => l.code === r.code);
-        return { code: r.code, meta };
+        return { code: r.code, meta, currency: r.currency };
       });
 
       if (selectedLocales.length === 0) {
@@ -1178,7 +1682,8 @@
           const translated = await translateLayers(
             selectedFrame.textLayers,
             loc.code,
-            loc.meta
+            loc.meta,
+            loc.currency
           );
 
           // Apply this locale to canvas immediately
@@ -1212,7 +1717,7 @@
 
     const WORKER_URL = "https://localyse-proxy.adiramanan98.workers.dev";
 
-    async function translateLayers(textLayers, localeCode, localeMeta) {
+    async function translateLayers(textLayers, localeCode, localeMeta, currencyCode) {
       const payload = {
         textLayers: textLayers.map(l => ({
           id: l.id,
@@ -1221,7 +1726,7 @@
         })),
         targetLocale: localeMeta.azureCode || localeCode,
         localeLabel: localeMeta.label || "",
-        localeCurrencies: localeMeta.currencies || [],
+        localeCurrencies: currencyCode ? [currencyCode] : (localeMeta.currencies || []),
       };
 
       const response = await fetch(WORKER_URL, {
