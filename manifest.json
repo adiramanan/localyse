@@ -1,0 +1,20 @@
+{
+  "id": "1604794975030379607",
+  "name": "Localyse",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "documentAccess": "dynamic-page",
+  "permissions": [
+    "currentuser"
+  ],
+  "editorType": [
+    "figma"
+  ],
+  "networkAccess": {
+    "allowedDomains": [
+      "https://localyse-proxy.adiramanan98.workers.dev"
+    ],
+    "reasoning": "Required to call the translation proxy for smart content translation."
+  }
+}

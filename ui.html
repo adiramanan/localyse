@@ -1,0 +1,2189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src blob: data:; connect-src https://localyse-proxy.adiramanan98.workers.dev;" />
+  <style>
+    /* ------------------------------------------------------------------ */
+    /*  RESET & BASE                                                      */
+    /* ------------------------------------------------------------------ */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #ffffff;
+      --bg-secondary: #f5f5f5;
+      --bg-tertiary: #ebebeb;
+      --text-primary: #1e1e1e;
+      --text-secondary: #6b6b6b;
+      --text-tertiary: #999999;
+      --border: #e0e0e0;
+      --accent: #5b5bf6;
+      --accent-hover: #4a4ae0;
+      --accent-light: #ededff;
+      --danger: #e74c3c;
+      --success: #27ae60;
+      --radius: 8px;
+      --radius-lg: 12px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, .08);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, .1);
+      --transition: 180ms ease;
+    }
+
+    /* Figma dark theme overrides */
+    .figma-dark {
+      --bg: #2c2c2c;
+      --bg-secondary: #383838;
+      --bg-tertiary: #444444;
+      --text-primary: #e5e5e5;
+      --text-secondary: #a0a0a0;
+      --text-tertiary: #777777;
+      --border: #4a4a4a;
+      --accent-light: #3a3a6e;
+    }
+
+    html,
+    body {
+      height: 100%;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text-primary);
+      background: var(--bg);
+      overflow-x: hidden;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  UTILITIES                                                         */
+    /* ------------------------------------------------------------------ */
+    .hidden {
+      display: none !important;
+    }
+
+    .fade-in {
+      animation: fadeIn .25s ease both;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  SUCCESS STATE                                                     */
+    /* ------------------------------------------------------------------ */
+    .success-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      padding: 40px 24px;
+      text-align: center;
+      animation: fadeIn .3s ease both;
+    }
+
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+    }
+
+    .success-icon svg {
+      width: 32px;
+      height: 32px;
+      color: #fff;
+    }
+
+    .success-state h2 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .success-state p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .success-locales {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      margin-top: 14px;
+    }
+
+    .success-locale-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 10px;
+      border-radius: 20px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  HEADER                                                            */
+    /* ------------------------------------------------------------------ */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .header-logo {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: var(--accent);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .header-title {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .header-subtitle {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-left: auto;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  SCROLLABLE BODY                                                   */
+    /* ------------------------------------------------------------------ */
+    .body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  EMPTY STATE                                                       */
+    /* ------------------------------------------------------------------ */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 12px;
+      padding: 40px 24px;
+    }
+
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--bg-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .empty-icon svg {
+      width: 28px;
+      height: 28px;
+      color: var(--text-tertiary);
+    }
+
+    .empty-state h2 {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .empty-state p {
+      font-size: 12px;
+      color: var(--text-secondary);
+      max-width: 260px;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  FRAME PREVIEW CARD                                                */
+    /* ------------------------------------------------------------------ */
+    .frame-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      background: var(--bg-secondary);
+    }
+
+    .frame-preview {
+      width: 100%;
+      max-height: 220px;
+      object-fit: contain;
+      display: block;
+      background: var(--bg-tertiary);
+    }
+
+    .frame-meta {
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+
+    .frame-meta-name {
+      font-weight: 600;
+    }
+
+    .frame-meta-dim {
+      color: var(--text-secondary);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  SECTION                                                           */
+    /* ------------------------------------------------------------------ */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  LOCALE ROWS                                                       */
+    /* ------------------------------------------------------------------ */
+    .locale-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .locale-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      animation: fadeIn .2s ease both;
+    }
+
+    .locale-row .locale-select-wrap {
+      flex: 1;
+    }
+
+    .locale-select {
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 13px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--text-primary);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+    }
+
+    .locale-select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-light);
+    }
+
+    .locale-info {
+      font-size: 11px;
+      color: var(--text-secondary);
+      padding: 3px 0 0 2px;
+      line-height: 1.4;
+    }
+
+    .locale-info .tag {
+      display: inline-block;
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+      padding: 1px 6px;
+      margin: 2px 2px 0 0;
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    .locale-remove-btn {
+      width: 32px;
+      height: 36px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    .locale-remove-btn:hover {
+      background: #fde8e8;
+      color: var(--danger);
+    }
+
+    .add-locale-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--accent);
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background var(--transition);
+      width: 100%;
+      justify-content: center;
+    }
+
+    .add-locale-btn:hover {
+      background: var(--accent-light);
+    }
+
+    .add-locale-btn:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+
+    .add-locale-btn:disabled:hover {
+      background: transparent;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  BUTTONS                                                           */
+    /* ------------------------------------------------------------------ */
+    .btn-primary {
+      width: 100%;
+      padding: 11px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      background: var(--accent);
+      color: #fff;
+      transition: background var(--transition), opacity var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-primary:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .btn-primary:disabled:hover {
+      background: var(--accent);
+    }
+
+    .btn-secondary {
+      width: 100%;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      background: var(--bg);
+      color: var(--text-primary);
+      transition: background var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-secondary);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  PROGRESS / SPINNER                                                */
+    /* ------------------------------------------------------------------ */
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, .3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .progress-bar-wrap {
+      width: 100%;
+      height: 4px;
+      background: var(--bg-tertiary);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width .3s ease;
+    }
+
+    .status-text {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-secondary);
+      padding: 4px 0;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  RESULTS                                                           */
+    /* ------------------------------------------------------------------ */
+    .results-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .result-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      animation: fadeIn .25s ease both;
+    }
+
+    .result-header {
+      padding: 10px 14px;
+      background: var(--bg-secondary);
+      font-weight: 600;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .result-header .flag {
+      font-size: 16px;
+    }
+
+    .result-header .chevron {
+      margin-left: auto;
+      transition: transform .2s ease;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .result-header.open .chevron {
+      transform: rotate(180deg);
+    }
+
+    .result-body {
+      padding: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .3s ease, padding .3s ease;
+    }
+
+    .result-body.open {
+      max-height: 1200px;
+      padding: 10px 14px;
+    }
+
+    .translation-row {
+      display: flex;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--bg-tertiary);
+      font-size: 12px;
+    }
+
+    .translation-row:last-child {
+      border-bottom: none;
+    }
+
+    .translation-original {
+      flex: 1;
+      color: var(--text-secondary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .translation-arrow {
+      color: var(--text-tertiary);
+      flex-shrink: 0;
+    }
+
+    .translation-translated {
+      flex: 1;
+      font-weight: 500;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  FOOTER                                                            */
+    /* ------------------------------------------------------------------ */
+    .footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+
+
+    /* ------------------------------------------------------------------ */
+    /*  ERROR TOAST                                                       */
+    /* ------------------------------------------------------------------ */
+    .toast {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      right: 16px;
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      font-size: 12px;
+      font-weight: 500;
+      z-index: 1000;
+      animation: fadeIn .2s ease both;
+    }
+
+    .toast.error {
+      background: #fde8e8;
+      color: var(--danger);
+      border: 1px solid #f5c6c6;
+    }
+
+    .toast.success {
+      background: #e8f8ef;
+      color: var(--success);
+      border: 1px solid #b8e6cc;
+    }
+
+    .privacy-link {
+      display: block;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-tertiary);
+      text-decoration: none;
+      margin-top: 8px;
+      transition: color var(--transition);
+    }
+
+    .privacy-link:hover {
+      color: var(--text-secondary);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  CUSTOM DROPDOWN                                                   */
+    /* ------------------------------------------------------------------ */
+    .custom-select-wrap {
+      position: relative;
+      width: 100%;
+    }
+
+    .helper-text {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 4px;
+    }
+
+    .dropdown-section-title {
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+
+    .custom-select-trigger {
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 13px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    .custom-select-trigger:focus,
+    .custom-select-trigger.active {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-light);
+    }
+
+    .custom-select-trigger .placeholder {
+      color: var(--text-tertiary);
+    }
+
+    .custom-dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      max-height: 240px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      margin-top: 4px;
+      z-index: 100;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .custom-dropdown-menu.open {
+      display: flex;
+      animation: fadeIn .15s ease both;
+    }
+
+    .search-input-wrap {
+      padding: 8px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-secondary);
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 6px 8px;
+      font-size: 12px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg);
+      color: var(--text-primary);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .options-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px 0;
+    }
+
+    .option-item {
+      padding: 6px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-primary);
+    }
+
+    .option-item:hover,
+    .option-item.highlighted {
+      background: var(--bg-secondary);
+    }
+
+    .option-item.selected {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .option-item.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .option-item .check {
+      margin-left: auto;
+      opacity: 0;
+      color: var(--accent);
+    }
+
+    .option-item.selected .check {
+      opacity: 1;
+    }
+
+    .no-results {
+      padding: 12px;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  PRESET BAR (P6.5)                                                  */
+    /* ------------------------------------------------------------------ */
+    .preset-bar {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .preset-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      font-size: 11px;
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition);
+      white-space: nowrap;
+    }
+
+    .preset-chip:hover {
+      background: var(--accent-light);
+      border-color: var(--accent);
+    }
+
+    .preset-chip .preset-delete {
+      font-size: 10px;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      margin-left: 2px;
+    }
+
+    .preset-chip .preset-delete:hover {
+      color: var(--danger);
+    }
+
+    .preset-save-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: transparent;
+      border: 1px dashed var(--border);
+      font-size: 11px;
+      color: var(--accent);
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+
+    .preset-save-btn:hover {
+      background: var(--accent-light);
+    }
+
+    /* Scrollbar for options */
+    .options-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .options-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .options-list::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ================================================================ -->
+  <!--  HEADER                                                          -->
+  <!-- ================================================================ -->
+  <div class="header">
+    <div class="header-logo">L</div>
+    <span class="header-title">Localyse</span>
+    <span class="header-subtitle" id="stepIndicator">Select a frame</span>
+  </div>
+
+  <!-- ================================================================ -->
+  <!--  BODY                                                            -->
+  <!-- ================================================================ -->
+  <div class="body" id="bodyContainer">
+
+    <!-- EMPTY STATE -->
+    <div id="emptyState" class="empty-state">
+      <div class="empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+          stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="3" />
+          <path d="M3 9h18M9 3v18" />
+        </svg>
+      </div>
+      <h2>No frame selected</h2>
+      <p>Select a frame, component, or instance on the canvas to get started.</p>
+    </div>
+
+    <!-- MAIN CONTENT (hidden until frame selected) -->
+    <div id="mainContent" class="hidden fade-in">
+
+      <!-- Frame preview -->
+      <div class="frame-card">
+        <img id="frameImage" class="frame-preview" alt="Frame preview" />
+        <div class="frame-meta">
+          <span class="frame-meta-name" id="frameName"></span>
+          <span class="frame-meta-dim" id="frameDim"></span>
+        </div>
+      </div>
+
+
+
+      <!-- Locales -->
+      <div>
+        <div class="section-label">Target Locales (up to 5)</div>
+        <div class="locale-list" id="localeList"></div>
+        <button class="add-locale-btn" id="addLocaleBtn" style="margin-top:8px;">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"
+            stroke-linecap="round">
+            <line x1="6" y1="1" x2="6" y2="11" />
+            <line x1="1" y1="6" x2="11" y2="6" />
+          </svg>
+          Add locale
+        </button>
+      </div>
+
+      <!-- Results (hidden until generation) -->
+      <div id="resultsSection" class="results-section hidden"></div>
+    </div>
+
+    <!-- GENERATING STATE -->
+    <div id="generatingState" class="hidden"
+      style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:40px 20px;">
+      <div class="spinner"
+        style="border-color:var(--accent-light);border-top-color:var(--accent);width:28px;height:28px;border-width:3px;">
+      </div>
+      <div class="status-text" id="genStatus">Translating…</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="genProgress" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- SUCCESS STATE -->
+    <div id="successState" class="success-state hidden">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+          stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      </div>
+      <h2 id="successTitle">Translations applied!</h2>
+      <p id="successSubtitle">Your localised frames have been created on the canvas.</p>
+      <div class="success-locales" id="successLocales"></div>
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
+  <!--  FOOTER                                                          -->
+  <!-- ================================================================ -->
+  <div class="footer" id="footer">
+    <button class="btn-primary" id="generateBtn" disabled>
+      Generate Translations
+    </button>
+    <a class="privacy-link" href="https://localyse-proxy.adiramanan98.workers.dev/privacy" target="_blank">Privacy
+      Policy</a>
+  </div>
+
+  <!-- ================================================================ -->
+  <!--  SCRIPT                                                          -->
+  <!-- ================================================================ -->
+  <script>
+    // ==================================================================
+    // LOCALE DATA
+    // ==================================================================
+    const LOCALES = [
+      { code: "af-ZA", azureCode: "af", label: "Afrikaans (South Africa)", flag: "🇿🇦", languages: ["Afrikaans"], currencies: ["ZAR"] },
+      { code: "am-ET", azureCode: "am", label: "Amharic (Ethiopia)", flag: "🇪🇹", languages: ["Amharic"], currencies: ["ETB"] },
+      { code: "ar-SA", azureCode: "ar", label: "Arabic (Saudi Arabia)", flag: "🇸🇦", languages: ["Arabic"], currencies: ["SAR"] },
+      { code: "as-IN", azureCode: "as", label: "Assamese (India)", flag: "🇮🇳", languages: ["Assamese"], currencies: ["INR"] },
+      { code: "az-AZ", azureCode: "az", label: "Azerbaijani (Azerbaijan)", flag: "🇦🇿", languages: ["Azerbaijani"], currencies: ["AZN"] },
+      { code: "ba-RU", azureCode: "ba", label: "Bashkir (Russia)", flag: "🇷🇺", languages: ["Bashkir"], currencies: ["RUB"] },
+      { code: "be-BY", azureCode: "be", label: "Belarusian (Belarus)", flag: "🇧🇾", languages: ["Belarusian"], currencies: ["BYN"] },
+      { code: "bg-BG", azureCode: "bg", label: "Bulgarian (Bulgaria)", flag: "🇧🇬", languages: ["Bulgarian"], currencies: ["BGN"] },
+      { code: "bho-IN", azureCode: "bho", label: "Bhojpuri (India)", flag: "🇮🇳", languages: ["Bhojpuri"], currencies: ["INR"] },
+      { code: "bn-BD", azureCode: "bn", label: "Bengali (Bangladesh)", flag: "🇧🇩", languages: ["Bengali"], currencies: ["BDT"] },
+      { code: "bo-CN", azureCode: "bo", label: "Tibetan (China)", flag: "🇨🇳", languages: ["Tibetan"], currencies: ["CNY"] },
+      { code: "brx-IN", azureCode: "brx", label: "Bodo (India)", flag: "🇮🇳", languages: ["Bodo"], currencies: ["INR"] },
+      { code: "bs-BA", azureCode: "bs", label: "Bosnian (Bosnia)", flag: "🇧🇦", languages: ["Bosnian"], currencies: ["BAM"] },
+      { code: "ca-ES", azureCode: "ca", label: "Catalan (Spain)", flag: "🇪🇸", languages: ["Catalan"], currencies: ["EUR"] },
+      { code: "cs-CZ", azureCode: "cs", label: "Czech (Czechia)", flag: "🇨🇿", languages: ["Czech"], currencies: ["CZK"] },
+      { code: "cy-GB", azureCode: "cy", label: "Welsh (United Kingdom)", flag: "🏴󠁧󠁢󠁷󠁬󠁳󠁿", languages: ["Welsh"], currencies: ["GBP"] },
+      { code: "da-DK", azureCode: "da", label: "Danish (Denmark)", flag: "🇩🇰", languages: ["Danish"], currencies: ["DKK"] },
+      { code: "de-AT", azureCode: "de", label: "German (Austria)", flag: "🇦🇹", languages: ["German"], currencies: ["EUR"] },
+      { code: "de-CH", azureCode: "de", label: "German (Switzerland)", flag: "🇨🇭", languages: ["German"], currencies: ["CHF"] },
+      { code: "de-DE", azureCode: "de", label: "German (Germany)", flag: "🇩🇪", languages: ["German"], currencies: ["EUR"] },
+      { code: "doi-IN", azureCode: "doi", label: "Dogri (India)", flag: "🇮🇳", languages: ["Dogri"], currencies: ["INR"] },
+      { code: "dsb-DE", azureCode: "dsb", label: "Lower Sorbian (Germany)", flag: "🇩🇪", languages: ["Lower Sorbian"], currencies: ["EUR"] },
+      { code: "dv-MV", azureCode: "dv", label: "Divehi (Maldives)", flag: "🇲🇻", languages: ["Divehi"], currencies: ["MVR"] },
+      { code: "el-GR", azureCode: "el", label: "Greek (Greece)", flag: "🇬🇷", languages: ["Greek"], currencies: ["EUR"] },
+      { code: "en-AU", azureCode: "en", label: "English (Australia)", flag: "🇦🇺", languages: ["English"], currencies: ["AUD"] },
+      { code: "en-CA", azureCode: "en", label: "English (Canada)", flag: "🇨🇦", languages: ["English"], currencies: ["CAD"] },
+      { code: "en-GB", azureCode: "en", label: "English (United Kingdom)", flag: "🇬🇧", languages: ["English"], currencies: ["GBP"] },
+      { code: "en-IN", azureCode: "en", label: "English (India)", flag: "🇮🇳", languages: ["English"], currencies: ["INR"] },
+      { code: "en-US", azureCode: "en", label: "English (United States)", flag: "🇺🇸", languages: ["English"], currencies: ["USD"] },
+      { code: "es-AR", azureCode: "es", label: "Spanish (Argentina)", flag: "🇦🇷", languages: ["Spanish"], currencies: ["ARS"] },
+      { code: "es-ES", azureCode: "es", label: "Spanish (Spain)", flag: "🇪🇸", languages: ["Spanish"], currencies: ["EUR"] },
+      { code: "es-MX", azureCode: "es", label: "Spanish (Mexico)", flag: "🇲🇽", languages: ["Spanish"], currencies: ["MXN"] },
+      { code: "et-EE", azureCode: "et", label: "Estonian (Estonia)", flag: "🇪🇪", languages: ["Estonian"], currencies: ["EUR"] },
+      { code: "eu-ES", azureCode: "eu", label: "Basque", flag: "🇪🇸", languages: ["Basque"], currencies: ["EUR"] },
+      { code: "fa-IR", azureCode: "fa", label: "Persian (Iran)", flag: "🇮🇷", languages: ["Persian"], currencies: ["IRR"] },
+      { code: "fi-FI", azureCode: "fi", label: "Finnish (Finland)", flag: "🇫🇮", languages: ["Finnish"], currencies: ["EUR"] },
+      { code: "fil-PH", azureCode: "fil", label: "Filipino (Philippines)", flag: "🇵🇭", languages: ["Filipino"], currencies: ["PHP"] },
+      { code: "fj-FJ", azureCode: "fj", label: "Fijian", flag: "🇫🇯", languages: ["Fijian"], currencies: ["FJD"] },
+      { code: "fo-FO", azureCode: "fo", label: "Faroese", flag: "🇫🇴", languages: ["Faroese"], currencies: ["DKK"] },
+      { code: "fr-CA", azureCode: "fr-ca", label: "French (Canada)", flag: "🇨🇦", languages: ["French"], currencies: ["CAD"] },
+      { code: "fr-FR", azureCode: "fr", label: "French (France)", flag: "🇫🇷", languages: ["French"], currencies: ["EUR"] },
+      { code: "ga-IE", azureCode: "ga", label: "Irish (Ireland)", flag: "🇮🇪", languages: ["Irish"], currencies: ["EUR"] },
+      { code: "gl-ES", azureCode: "gl", label: "Galician", flag: "🇪🇸", languages: ["Galician"], currencies: ["EUR"] },
+      { code: "gom-IN", azureCode: "gom", label: "Konkani", flag: "🇮🇳", languages: ["Konkani"], currencies: ["INR"] },
+      { code: "gu-IN", azureCode: "gu", label: "Gujarati (India)", flag: "🇮🇳", languages: ["Gujarati"], currencies: ["INR"] },
+      { code: "ha-NG", azureCode: "ha", label: "Hausa", flag: "🇳🇬", languages: ["Hausa"], currencies: ["NGN"] },
+      { code: "he-IL", azureCode: "he", label: "Hebrew (Israel)", flag: "🇮🇱", languages: ["Hebrew"], currencies: ["ILS"] },
+      { code: "hi-IN", azureCode: "hi", label: "Hindi (India)", flag: "🇮🇳", languages: ["Hindi"], currencies: ["INR"] },
+      { code: "hne-IN", azureCode: "hne", label: "Chhattisgarhi", flag: "🇮🇳", languages: ["Chhattisgarhi"], currencies: ["INR"] },
+      { code: "hr-HR", azureCode: "hr", label: "Croatian (Croatia)", flag: "🇭🇷", languages: ["Croatian"], currencies: ["EUR"] },
+      { code: "hsb-DE", azureCode: "hsb", label: "Upper Sorbian", flag: "🇩🇪", languages: ["Upper Sorbian"], currencies: ["EUR"] },
+      { code: "ht-HT", azureCode: "ht", label: "Haitian Creole", flag: "🇭🇹", languages: ["Haitian Creole"], currencies: ["HTG"] },
+      { code: "hu-HU", azureCode: "hu", label: "Hungarian (Hungary)", flag: "🇭🇺", languages: ["Hungarian"], currencies: ["HUF"] },
+      { code: "hy-AM", azureCode: "hy", label: "Armenian (Armenia)", flag: "🇦🇲", languages: ["Armenian"], currencies: ["AMD"] },
+      { code: "id-ID", azureCode: "id", label: "Indonesian (Indonesia)", flag: "🇮🇩", languages: ["Indonesian"], currencies: ["IDR"] },
+      { code: "ig-NG", azureCode: "ig", label: "Igbo", flag: "🇳🇬", languages: ["Igbo"], currencies: ["NGN"] },
+      { code: "ikt-CA", azureCode: "ikt", label: "Inuinnaqtun", flag: "🇨🇦", languages: ["Inuinnaqtun"], currencies: ["CAD"] },
+      { code: "is-IS", azureCode: "is", label: "Icelandic (Iceland)", flag: "🇮🇸", languages: ["Icelandic"], currencies: ["ISK"] },
+      { code: "it-IT", azureCode: "it", label: "Italian (Italy)", flag: "🇮🇹", languages: ["Italian"], currencies: ["EUR"] },
+      { code: "iu-CA", azureCode: "iu", label: "Inuktitut", flag: "🇨🇦", languages: ["Inuktitut"], currencies: ["CAD"] },
+      { code: "iu-Latn-CA", azureCode: "iu-Latn", label: "Inuktitut (Latin)", flag: "🇨🇦", languages: ["Inuktitut"], currencies: ["CAD"] },
+      { code: "ja-JP", azureCode: "ja", label: "Japanese (Japan)", flag: "🇯🇵", languages: ["Japanese"], currencies: ["JPY"] },
+      { code: "ka-GE", azureCode: "ka", label: "Georgian (Georgia)", flag: "🇬🇪", languages: ["Georgian"], currencies: ["GEL"] },
+      { code: "kk-KZ", azureCode: "kk", label: "Kazakh (Kazakhstan)", flag: "🇰🇿", languages: ["Kazakh"], currencies: ["KZT"] },
+      { code: "km-KH", azureCode: "km", label: "Khmer (Cambodia)", flag: "🇰🇭", languages: ["Khmer"], currencies: ["KHR"] },
+      { code: "kmr-IQ", azureCode: "kmr", label: "Kurdish (Northern)", flag: "🇮🇶", languages: ["Kurdish"], currencies: ["IQD"] },
+      { code: "kn-IN", azureCode: "kn", label: "Kannada (India)", flag: "🇮🇳", languages: ["Kannada"], currencies: ["INR"] },
+      { code: "ko-KR", azureCode: "ko", label: "Korean (South Korea)", flag: "🇰🇷", languages: ["Korean"], currencies: ["KRW"] },
+      { code: "ks-IN", azureCode: "ks", label: "Kashmiri", flag: "🇮🇳", languages: ["Kashmiri"], currencies: ["INR"] },
+      { code: "ku-IQ", azureCode: "ku", label: "Kurdish (Central)", flag: "🇮🇶", languages: ["Kurdish"], currencies: ["IQD"] },
+      { code: "ky-KG", azureCode: "ky", label: "Kyrgyz", flag: "🇰🇬", languages: ["Kyrgyz"], currencies: ["KGS"] },
+      { code: "lb-LU", azureCode: "lb", label: "Luxembourgish", flag: "🇱🇺", languages: ["Luxembourgish"], currencies: ["EUR"] },
+      { code: "ln-CD", azureCode: "ln", label: "Lingala", flag: "🇨🇩", languages: ["Lingala"], currencies: ["CDF"] },
+      { code: "lo-LA", azureCode: "lo", label: "Lao (Laos)", flag: "🇱🇦", languages: ["Lao"], currencies: ["LAK"] },
+      { code: "lt-LT", azureCode: "lt", label: "Lithuanian (Lithuania)", flag: "🇱🇹", languages: ["Lithuanian"], currencies: ["EUR"] },
+      { code: "lug-UG", azureCode: "lug", label: "Ganda", flag: "🇺🇬", languages: ["Ganda"], currencies: ["UGX"] },
+      { code: "lv-LV", azureCode: "lv", label: "Latvian (Latvia)", flag: "🇱🇻", languages: ["Latvian"], currencies: ["EUR"] },
+      { code: "lzh-CN", azureCode: "lzh", label: "Chinese (Literary)", flag: "🇨🇳", languages: ["Chinese"], currencies: ["CNY"] },
+      { code: "mai-IN", azureCode: "mai", label: "Maithili", flag: "🇮🇳", languages: ["Maithili"], currencies: ["INR"] },
+      { code: "mg-MG", azureCode: "mg", label: "Malagasy", flag: "🇲🇬", languages: ["Malagasy"], currencies: ["MGA"] },
+      { code: "mi-NZ", azureCode: "mi", label: "Māori", flag: "🇳🇿", languages: ["Māori"], currencies: ["NZD"] },
+      { code: "mk-MK", azureCode: "mk", label: "Macedonian (North Macedonia)", flag: "🇲🇰", languages: ["Macedonian"], currencies: ["MKD"] },
+      { code: "ml-IN", azureCode: "ml", label: "Malayalam (India)", flag: "🇮🇳", languages: ["Malayalam"], currencies: ["INR"] },
+      { code: "mn-MN", azureCode: "mn-Cyrl", label: "Mongolian (Mongolia)", flag: "🇲🇳", languages: ["Mongolian"], currencies: ["MNT"] },
+      { code: "mn-Mong-CN", azureCode: "mn-Mong", label: "Mongolian (Traditional)", flag: "🇨🇳", languages: ["Mongolian"], currencies: ["CNY"] },
+      { code: "mni-IN", azureCode: "mni", label: "Manipuri", flag: "🇮🇳", languages: ["Manipuri"], currencies: ["INR"] },
+      { code: "mr-IN", azureCode: "mr", label: "Marathi (India)", flag: "🇮🇳", languages: ["Marathi"], currencies: ["INR"] },
+      { code: "ms-MY", azureCode: "ms", label: "Malay (Malaysia)", flag: "🇲🇾", languages: ["Malay"], currencies: ["MYR"] },
+      { code: "mt-MT", azureCode: "mt", label: "Maltese (Malta)", flag: "🇲🇹", languages: ["Maltese"], currencies: ["EUR"] },
+      { code: "mww-US", azureCode: "mww", label: "Hmong Daw", flag: "🇺🇸", languages: ["Hmong Daw"], currencies: ["USD"] },
+      { code: "my-MM", azureCode: "my", label: "Myanmar (Myanmar)", flag: "🇲🇲", languages: ["Burmese"], currencies: ["MMK"] },
+      { code: "nb-NO", azureCode: "nb", label: "Norwegian Bokmål (Norway)", flag: "🇳🇴", languages: ["Norwegian Bokmål"], currencies: ["NOK"] },
+      { code: "ne-NP", azureCode: "ne", label: "Nepali (Nepal)", flag: "🇳🇵", languages: ["Nepali"], currencies: ["NPR"] },
+      { code: "nl-NL", azureCode: "nl", label: "Dutch (Netherlands)", flag: "🇳🇱", languages: ["Dutch"], currencies: ["EUR"] },
+      { code: "nso-ZA", azureCode: "nso", label: "Sesotho sa Leboa", flag: "🇿🇦", languages: ["Sesotho sa Leboa"], currencies: ["ZAR"] },
+      { code: "nya-MW", azureCode: "nya", label: "Nyanja", flag: "🇲🇼", languages: ["Nyanja"], currencies: ["MWK"] },
+      { code: "or-IN", azureCode: "or", label: "Odia", flag: "🇮🇳", languages: ["Odia"], currencies: ["INR"] },
+      { code: "otq-MX", azureCode: "otq", label: "Querétaro Otomi", flag: "🇲🇽", languages: ["Querétaro Otomi"], currencies: ["MXN"] },
+      { code: "pa-IN", azureCode: "pa", label: "Punjabi (India)", flag: "🇮🇳", languages: ["Punjabi"], currencies: ["INR"] },
+      { code: "pl-PL", azureCode: "pl", label: "Polish (Poland)", flag: "🇵🇱", languages: ["Polish"], currencies: ["PLN"] },
+      { code: "prs-AF", azureCode: "prs", label: "Dari", flag: "🇦🇫", languages: ["Dari"], currencies: ["AFN"] },
+      { code: "ps-AF", azureCode: "ps", label: "Pashto (Afghanistan)", flag: "🇦🇫", languages: ["Pashto"], currencies: ["AFN"] },
+      { code: "pt-BR", azureCode: "pt", label: "Portuguese (Brazil)", flag: "🇧🇷", languages: ["Portuguese"], currencies: ["BRL"] },
+      { code: "pt-PT", azureCode: "pt-PT", label: "Portuguese (Portugal)", flag: "🇵🇹", languages: ["Portuguese"], currencies: ["EUR"] },
+      { code: "ro-RO", azureCode: "ro", label: "Romanian (Romania)", flag: "🇷🇴", languages: ["Romanian"], currencies: ["RON"] },
+      { code: "ru-RU", azureCode: "ru", label: "Russian (Russia)", flag: "🇷🇺", languages: ["Russian"], currencies: ["RUB"] },
+      { code: "run-BI", azureCode: "run", label: "Rundi", flag: "🇧🇮", languages: ["Rundi"], currencies: ["BIF"] },
+      { code: "rw-RW", azureCode: "rw", label: "Kinyarwanda", flag: "🇷🇼", languages: ["Kinyarwanda"], currencies: ["RWF"] },
+      { code: "sd-PK", azureCode: "sd", label: "Sindhi", flag: "🇵🇰", languages: ["Sindhi"], currencies: ["PKR"] },
+      { code: "si-LK", azureCode: "si", label: "Sinhala (Sri Lanka)", flag: "🇱🇰", languages: ["Sinhala"], currencies: ["LKR"] },
+      { code: "sk-SK", azureCode: "sk", label: "Slovak (Slovakia)", flag: "🇸🇰", languages: ["Slovak"], currencies: ["EUR"] },
+      { code: "sl-SI", azureCode: "sl", label: "Slovenian (Slovenia)", flag: "🇸🇮", languages: ["Slovenian"], currencies: ["EUR"] },
+      { code: "sm-WS", azureCode: "sm", label: "Samoan", flag: "🇼🇸", languages: ["Samoan"], currencies: ["WST"] },
+      { code: "sn-ZW", azureCode: "sn", label: "Shona", flag: "🇿🇼", languages: ["Shona"], currencies: ["USD"] },
+      { code: "so-SO", azureCode: "so", label: "Somali", flag: "🇸🇴", languages: ["Somali"], currencies: ["SOS"] },
+      { code: "sq-AL", azureCode: "sq", label: "Albanian (Albania)", flag: "🇦🇱", languages: ["Albanian"], currencies: ["ALL"] },
+      { code: "sr-RS", azureCode: "sr-Latn", label: "Serbian (Latin)", flag: "🇷🇸", languages: ["Serbian"], currencies: ["RSD"] },
+      { code: "sr-Cyrl-RS", azureCode: "sr-Cyrl", label: "Serbian (Cyrillic)", flag: "🇷🇸", languages: ["Serbian"], currencies: ["RSD"] },
+      { code: "st-ZA", azureCode: "st", label: "Sesotho", flag: "🇿🇦", languages: ["Sesotho"], currencies: ["ZAR"] },
+      { code: "sv-SE", azureCode: "sv", label: "Swedish (Sweden)", flag: "🇸🇪", languages: ["Swedish"], currencies: ["SEK"] },
+      { code: "sw-KE", azureCode: "sw", label: "Swahili (Kenya)", flag: "🇰🇪", languages: ["Swahili"], currencies: ["KES"] },
+      { code: "ta-IN", azureCode: "ta", label: "Tamil (India)", flag: "🇮🇳", languages: ["Tamil"], currencies: ["INR"] },
+      { code: "te-IN", azureCode: "te", label: "Telugu (India)", flag: "🇮🇳", languages: ["Telugu"], currencies: ["INR"] },
+      { code: "th-TH", azureCode: "th", label: "Thai (Thailand)", flag: "🇹🇭", languages: ["Thai"], currencies: ["THB"] },
+      { code: "ti-ER", azureCode: "ti", label: "Tigrinya", flag: "🇪🇷", languages: ["Tigrinya"], currencies: ["ERN"] },
+      { code: "tk-TM", azureCode: "tk", label: "Turkmen", flag: "🇹🇲", languages: ["Turkmen"], currencies: ["TMT"] },
+      { code: "tlh-Latn", azureCode: "tlh-Latn", label: "Klingon (Latin)", flag: "🏴", languages: ["Klingon"], currencies: [] },
+      { code: "tlh-Piqd", azureCode: "tlh-Piqd", label: "Klingon (pIqaD)", flag: "🏴", languages: ["Klingon"], currencies: [] },
+      { code: "tn-BW", azureCode: "tn", label: "Setswana", flag: "🇧🇼", languages: ["Setswana"], currencies: ["BWP"] },
+      { code: "to-TO", azureCode: "to", label: "Tongan", flag: "🇹🇴", languages: ["Tongan"], currencies: ["TOP"] },
+      { code: "tr-TR", azureCode: "tr", label: "Turkish (Turkey)", flag: "🇹🇷", languages: ["Turkish"], currencies: ["TRY"] },
+      { code: "tt-RU", azureCode: "tt", label: "Tatar", flag: "🇷🇺", languages: ["Tatar"], currencies: ["RUB"] },
+      { code: "ty-PF", azureCode: "ty", label: "Tahitian", flag: "🇵🇫", languages: ["Tahitian"], currencies: ["XPF"] },
+      { code: "ug-CN", azureCode: "ug", label: "Uyghur", flag: "🇨🇳", languages: ["Uyghur"], currencies: ["CNY"] },
+      { code: "uk-UA", azureCode: "uk", label: "Ukrainian (Ukraine)", flag: "🇺🇦", languages: ["Ukrainian"], currencies: ["UAH"] },
+      { code: "ur-PK", azureCode: "ur", label: "Urdu (Pakistan)", flag: "🇵🇰", languages: ["Urdu"], currencies: ["PKR"] },
+      { code: "uz-UZ", azureCode: "uz", label: "Uzbek (Uzbekistan)", flag: "🇺🇿", languages: ["Uzbek"], currencies: ["UZS"] },
+      { code: "vi-VN", azureCode: "vi", label: "Vietnamese (Vietnam)", flag: "🇻🇳", languages: ["Vietnamese"], currencies: ["VND"] },
+      { code: "xh-ZA", azureCode: "xh", label: "Xhosa", flag: "🇿🇦", languages: ["Xhosa"], currencies: ["ZAR"] },
+      { code: "yo-NG", azureCode: "yo", label: "Yoruba", flag: "🇳🇬", languages: ["Yoruba"], currencies: ["NGN"] },
+      { code: "yua-MX", azureCode: "yua", label: "Yucatec Maya", flag: "🇲🇽", languages: ["Yucatec Maya"], currencies: ["MXN"] },
+      { code: "yue-CN", azureCode: "yue", label: "Cantonese (Traditional)", flag: "🇭🇰", languages: ["Cantonese"], currencies: ["HKD"] },
+      { code: "zh-CN", azureCode: "zh-Hans", label: "Chinese Simplified (China)", flag: "🇨🇳", languages: ["Chinese (Simplified)"], currencies: ["CNY"] },
+      { code: "zh-TW", azureCode: "zh-Hant", label: "Chinese Traditional (Taiwan)", flag: "🇹🇼", languages: ["Chinese (Traditional)"], currencies: ["TWD"] },
+      { code: "zu-ZA", azureCode: "zu", label: "Zulu (South Africa)", flag: "🇿🇦", languages: ["Zulu"], currencies: ["ZAR"] },
+    ];
+
+    // ==================================================================
+    // CURRENCIES
+    // ==================================================================
+    const CURRENCIES = [
+      // --- COMMON ---
+      { code: "USD", name: "US Dollar", symbol: "$" },
+      { code: "EUR", name: "Euro", symbol: "€" },
+      { code: "GBP", name: "British Pound", symbol: "£" },
+      { code: "CAD", name: "Canadian Dollar", symbol: "$" },
+      { code: "AUD", name: "Australian Dollar", symbol: "$" },
+      { code: "JPY", name: "Japanese Yen", symbol: "¥" },
+      { code: "CNY", name: "Chinese Yuan", symbol: "¥" },
+      { code: "INR", name: "Indian Rupee", symbol: "₹" },
+      { code: "AED", name: "United Arab Emirates Dirham", symbol: "د.إ" },
+      { code: "CHF", name: "Swiss Franc", symbol: "Fr" },
+      { code: "HKD", name: "Hong Kong Dollar", symbol: "$" },
+      { code: "SGD", name: "Singapore Dollar", symbol: "$" },
+      { code: "SEK", name: "Swedish Krona", symbol: "kr" },
+      { code: "KRW", name: "South Korean Won", symbol: "₩" },
+
+      // --- ALL OTHERS (Alphabetical) ---
+      { code: "AFN", name: "Afghan Afghani", symbol: "؋" },
+      { code: "ALL", name: "Albanian Lek", symbol: "L" },
+      { code: "AMD", name: "Armenian Dram", symbol: "֏" },
+      { code: "ANG", name: "Netherlands Antillean Guilder", symbol: "ƒ" },
+      { code: "AOA", name: "Angolan Kwanza", symbol: "Kz" },
+      { code: "ARS", name: "Argentine Peso", symbol: "$" },
+      { code: "AWG", name: "Aruban Florin", symbol: "ƒ" },
+      { code: "AZN", name: "Azerbaijani Manat", symbol: "₼" },
+      { code: "BAM", name: "Bosnia-Herzegovina Convertible Mark", symbol: "KM" },
+      { code: "BBD", name: "Barbadian Dollar", symbol: "$" },
+      { code: "BDT", name: "Bangladeshi Taka", symbol: "৳" },
+      { code: "BGN", name: "Bulgarian Lev", symbol: "лв" },
+      { code: "BHD", name: "Bahraini Dinar", symbol: ".د.ب" },
+      { code: "BIF", name: "Burundian Franc", symbol: "FBu" },
+      { code: "BMD", name: "Bermudan Dollar", symbol: "$" },
+      { code: "BND", name: "Brunei Dollar", symbol: "$" },
+      { code: "BOB", name: "Bolivian Boliviano", symbol: "Bs." },
+      { code: "BRL", name: "Brazilian Real", symbol: "R$" },
+      { code: "BSD", name: "Bahamian Dollar", symbol: "$" },
+      { code: "BTN", name: "Bhutanese Ngultrum", symbol: "Nu." },
+      { code: "BWP", name: "Botswana Pula", symbol: "P" },
+      { code: "BYN", name: "Belarusian Ruble", symbol: "Br" },
+      { code: "BZD", name: "Belize Dollar", symbol: "$" },
+      { code: "CDF", name: "Congolese Franc", symbol: "FC" },
+      { code: "CLP", name: "Chilean Peso", symbol: "$" },
+      { code: "COP", name: "Colombian Peso", symbol: "$" },
+      { code: "CRC", name: "Costa Rican Colón", symbol: "₡" },
+      { code: "CUP", name: "Cuban Peso", symbol: "$" },
+      { code: "CVE", name: "Cape Verdean Escudo", symbol: "$" },
+      { code: "CZK", name: "Czech Koruna", symbol: "Kč" },
+      { code: "DJF", name: "Djiboutian Franc", symbol: "Fdj" },
+      { code: "DKK", name: "Danish Krone", symbol: "kr" },
+      { code: "DOP", name: "Dominican Peso", symbol: "RD$" },
+      { code: "DZD", name: "Algerian Dinar", symbol: "د.ج" },
+      { code: "EGP", name: "Egyptian Pound", symbol: "£" },
+      { code: "ERN", name: "Eritrean Nakfa", symbol: "Nfk" },
+      { code: "ETB", name: "Ethiopian Birr", symbol: "Br" },
+      { code: "FJD", name: "Fijian Dollar", symbol: "$" },
+      { code: "FKP", name: "Falkland Islands Pound", symbol: "£" },
+      { code: "GEL", name: "Georgian Lari", symbol: "₾" },
+      { code: "GHS", name: "Ghanaian Cedi", symbol: "₵" },
+      { code: "GIP", name: "Gibraltar Pound", symbol: "£" },
+      { code: "GMD", name: "Gambian Dalasi", symbol: "D" },
+      { code: "GNF", name: "Guinean Franc", symbol: "FG" },
+      { code: "GTQ", name: "Guatemalan Quetzal", symbol: "Q" },
+      { code: "GYD", name: "Guyanaese Dollar", symbol: "$" },
+      { code: "HNL", name: "Honduran Lempira", symbol: "L" },
+      { code: "HRK", name: "Croatian Kuna", symbol: "kn" },
+      { code: "HTG", name: "Haitian Gourde", symbol: "G" },
+      { code: "HUF", name: "Hungarian Forint", symbol: "Ft" },
+      { code: "IDR", name: "Indonesian Rupiah", symbol: "Rp" },
+      { code: "ILS", name: "Israeli New Shekel", symbol: "₪" },
+      { code: "IQD", name: "Iraqi Dinar", symbol: "ع.د" },
+      { code: "IRR", name: "Iranian Rial", symbol: "﷼" },
+      { code: "ISK", name: "Icelandic Króna", symbol: "kr" },
+      { code: "JMD", name: "Jamaican Dollar", symbol: "J$" },
+      { code: "JOD", name: "Jordanian Dinar", symbol: "د.ا" },
+      { code: "KES", name: "Kenyan Shilling", symbol: "KSh" },
+      { code: "KGS", name: "Kyrgystani Som", symbol: "с" },
+      { code: "KHR", name: "Cambodian Riel", symbol: "៛" },
+      { code: "KMF", name: "Comorian Franc", symbol: "CF" },
+      { code: "KPW", name: "North Korean Won", symbol: "₩" },
+      { code: "KWD", name: "Kuwaiti Dinar", symbol: "د.ك" },
+      { code: "KYD", name: "Cayman Islands Dollar", symbol: "$" },
+      { code: "KZT", name: "Kazakhstani Tenge", symbol: "₸" },
+      { code: "LAK", name: "Laotian Kip", symbol: "₭" },
+      { code: "LBP", name: "Lebanese Pound", symbol: "ل.ل" },
+      { code: "LKR", name: "Sri Lankan Rupee", symbol: "Rs" },
+      { code: "LRD", name: "Liberian Dollar", symbol: "$" },
+      { code: "LSL", name: "Lesotho Loti", symbol: "L" },
+      { code: "LYD", name: "Libyan Dinar", symbol: "ل.د" },
+      { code: "MAD", name: "Moroccan Dirham", symbol: "د.م." },
+      { code: "MDL", name: "Moldovan Leu", symbol: "L" },
+      { code: "MGA", name: "Malagasy Ariary", symbol: "Ar" },
+      { code: "MKD", name: "Macedonian Denar", symbol: "ден" },
+      { code: "MMK", name: "Burmese Kyat", symbol: "K" },
+      { code: "MNT", name: "Mongolian Tugrik", symbol: "₮" },
+      { code: "MOP", name: "Macanese Pataca", symbol: "MOP$" },
+      { code: "MRU", name: "Mauritanian Ouguiya", symbol: "UM" },
+      { code: "MUR", name: "Mauritian Rupee", symbol: "₨" },
+      { code: "MVR", name: "Maldivian Rufiyaa", symbol: "Rf" },
+      { code: "MWK", name: "Malawian Kwacha", symbol: "MK" },
+      { code: "MXN", name: "Mexican Peso", symbol: "$" },
+      { code: "MYR", name: "Malaysian Ringgit", symbol: "RM" },
+      { code: "MZN", name: "Mozambican Metical", symbol: "MT" },
+      { code: "NAD", name: "Namibian Dollar", symbol: "$" },
+      { code: "NGN", name: "Nigerian Naira", symbol: "₦" },
+      { code: "NIO", name: "Nicaraguan Córdoba", symbol: "C$" },
+      { code: "NOK", name: "Norwegian Krone", symbol: "kr" },
+      { code: "NPR", name: "Nepalese Rupee", symbol: "₨" },
+      { code: "NZD", name: "New Zealand Dollar", symbol: "$" },
+      { code: "OMR", name: "Omani Rial", symbol: "ر.ع." },
+      { code: "PAB", name: "Panamanian Balboa", symbol: "B/." },
+      { code: "PEN", name: "Peruvian Sol", symbol: "S/." },
+      { code: "PGK", name: "Papua New Guinean Kina", symbol: "K" },
+      { code: "PHP", name: "Philippine Peso", symbol: "₱" },
+      { code: "PKR", name: "Pakistani Rupee", symbol: "₨" },
+      { code: "PLN", name: "Polish Zloty", symbol: "zł" },
+      { code: "PYG", name: "Paraguayan Guarani", symbol: "₲" },
+      { code: "QAR", name: "Qatari Riyal", symbol: "ر.ق" },
+      { code: "RON", name: "Romanian Leu", symbol: "lei" },
+      { code: "RSD", name: "Serbian Dinar", symbol: "дин." },
+      { code: "RUB", name: "Russian Ruble", symbol: "₽" },
+      { code: "RWF", name: "Rwandan Franc", symbol: "FRw" },
+      { code: "SAR", name: "Saudi Riyal", symbol: "ر.س" },
+      { code: "SBD", name: "Solomon Islands Dollar", symbol: "$" },
+      { code: "SCR", name: "Seychellois Rupee", symbol: "₨" },
+      { code: "SDG", name: "Sudanese Pound", symbol: "ج.س." },
+      { code: "SHP", name: "Saint Helena Pound", symbol: "£" },
+      { code: "SLL", name: "Sierra Leonean Leone", symbol: "Le" },
+      { code: "SOS", name: "Somali Shilling", symbol: "Sh" },
+      { code: "SRD", name: "Surinamese Dollar", symbol: "$" },
+      { code: "SSP", name: "South Sudanese Pound", symbol: "£" },
+      { code: "STN", name: "São Tomé and Príncipe Dobra", symbol: "Db" },
+      { code: "SYP", name: "Syrian Pound", symbol: "£" },
+      { code: "SZL", name: "Swazi Lilangeni", symbol: "L" },
+      { code: "THB", name: "Thai Baht", symbol: "฿" },
+      { code: "TJS", name: "Tajikistani Somoni", symbol: "SM" },
+      { code: "TMT", name: "Turkmenistani Manat", symbol: "T" },
+      { code: "TND", name: "Tunisian Dinar", symbol: "د.ت" },
+      { code: "TOP", name: "Tongan Pa'anga", symbol: "T$" },
+      { code: "TRY", name: "Turkish Lira", symbol: "₺" },
+      { code: "TTD", name: "Trinidad and Tobago Dollar", symbol: "TT$" },
+      { code: "TWD", name: "New Taiwan Dollar", symbol: "NT$" },
+      { code: "TZS", name: "Tanzanian Shilling", symbol: "Sh" },
+      { code: "UAH", name: "Ukrainian Hryvnia", symbol: "₴" },
+      { code: "UGX", name: "Ugandan Shilling", symbol: "USh" },
+      { code: "UYU", name: "Uruguayan Peso", symbol: "$U" },
+      { code: "UZS", name: "Uzbekistan Som", symbol: "so'm" },
+      { code: "VES", name: "Venezuelan Bolívar", symbol: "Bs.S" },
+      { code: "VND", name: "Vietnamese Dong", symbol: "₫" },
+      { code: "VUV", name: "Vanuatu Vatu", symbol: "VT" },
+      { code: "WST", name: "Samoan Tala", symbol: "T" },
+      { code: "XAF", name: "CFA Franc BEAC", symbol: "FCFA" },
+      { code: "XCD", name: "East Caribbean Dollar", symbol: "$" },
+      { code: "XOF", name: "CFA Franc BCEAO", symbol: "CFA" },
+      { code: "XPF", name: "CFP Franc", symbol: "₣" },
+      { code: "YER", name: "Yemeni Rial", symbol: "﷼" },
+      { code: "ZAR", name: "South African Rand", symbol: "R" },
+      { code: "ZMW", name: "Zambian Kwacha", symbol: "ZK" },
+      { code: "ZWL", name: "Zimbabwean Dollar", symbol: "$" }
+    ];
+
+    // ==================================================================
+    // STATE
+    // ==================================================================
+    let selectedFrame = null;   // { id, name, width, height, imageBytes, textLayers }
+    let localeRows = [];        // array of { uid, code }
+    let isGenerating = false;
+    let isSuccess = false;
+    let successInfo = null;     // { count, locales: [{flag, label}] }
+    let translationResults = null; // array of { locale, localeMeta, layers:[{id,original,translated}] }
+    let appliedLocaleCodes = new Set(); // P6.4: track already-applied locales for incremental translation
+    let figmaUserId = "anonymous"; // received from plugin sandbox for rate limiting
+    let rateLimitRemaining = null; // P2.1: track remaining daily quota
+    let localePresets = []; // P6.5: saved locale presets [{name, locales:[code]}]
+
+    // ==================================================================
+    // DOM REFS
+    // ==================================================================
+    const $emptyState = document.getElementById("emptyState");
+    const $mainContent = document.getElementById("mainContent");
+    const $generatingState = document.getElementById("generatingState");
+    const $successState = document.getElementById("successState");
+    const $frameImage = document.getElementById("frameImage");
+    const $frameName = document.getElementById("frameName");
+    const $frameDim = document.getElementById("frameDim");
+    const $localeList = document.getElementById("localeList");
+    const $addLocaleBtn = document.getElementById("addLocaleBtn");
+    const $generateBtn = document.getElementById("generateBtn");
+    const $resultsSection = document.getElementById("resultsSection");
+    const $genStatus = document.getElementById("genStatus");
+    const $genProgress = document.getElementById("genProgress");
+    const $stepIndicator = document.getElementById("stepIndicator");
+
+    const $footer = document.getElementById("footer");
+
+    // Attach click handler to the initial HTML button
+    $generateBtn.addEventListener("click", () => startGeneration());
+
+    // ==================================================================
+    // UTILITY
+    // ==================================================================
+    let uidCounter = 0;
+    function uid() { return "lr-" + (++uidCounter); }
+
+    // P2.5: Prevent toast stacking — track current toast
+    let currentToast = null;
+    function showToast(message, type = "error") {
+      if (currentToast) {
+        currentToast.remove();
+        currentToast = null;
+      }
+      const el = document.createElement("div");
+      el.className = "toast " + type;
+      el.textContent = message;
+      document.body.appendChild(el);
+      currentToast = el;
+      setTimeout(() => {
+        if (currentToast === el) currentToast = null;
+        el.remove();
+      }, 4000);
+    }
+
+    const PRIVACY_URL = "https://localyse-proxy.adiramanan98.workers.dev/privacy";
+    function appendPrivacyLink() {
+      const a = document.createElement("a");
+      a.className = "privacy-link";
+      a.href = PRIVACY_URL;
+      a.target = "_blank";
+      a.textContent = "Privacy Policy";
+      $footer.appendChild(a);
+    }
+
+    // ==================================================================
+    // RENDER FUNCTIONS
+    // ==================================================================
+
+    function renderView() {
+      // Hide all states first
+      $emptyState.classList.add("hidden");
+      $mainContent.classList.add("hidden");
+      $generatingState.classList.add("hidden");
+      $generatingState.style.display = "none";
+      $successState.classList.add("hidden");
+      $footer.classList.remove("hidden");
+
+      if (isSuccess && successInfo) {
+        $successState.classList.remove("hidden");
+        $stepIndicator.textContent = "Complete";
+        document.getElementById("successTitle").textContent =
+          successInfo.count + " locale" + (successInfo.count > 1 ? "s" : "") + " applied!";
+        document.getElementById("successSubtitle").textContent =
+          "Your localised frames have been created on the canvas.";
+        const $locales = document.getElementById("successLocales");
+        $locales.innerHTML = "";
+        successInfo.locales.forEach(loc => {
+          const tag = document.createElement("span");
+          tag.className = "success-locale-tag";
+          tag.textContent = loc.flag + " " + loc.label;
+          $locales.appendChild(tag);
+        });
+        // Show "Translate Another" button
+        $footer.innerHTML = '';
+        const btn = document.createElement("button");
+        btn.className = "btn-primary";
+        btn.textContent = "Translate Another";
+        btn.addEventListener("click", startOver);
+        $footer.appendChild(btn);
+        appendPrivacyLink();
+        return;
+      }
+
+      if (isGenerating) {
+        $generatingState.classList.remove("hidden");
+        $generatingState.style.display = "flex";
+        $footer.classList.add("hidden");
+        return;
+      }
+
+      if (!selectedFrame) {
+        $emptyState.classList.remove("hidden");
+        $generateBtn.disabled = true;
+        $stepIndicator.textContent = "Select a frame";
+        return;
+      }
+
+      $mainContent.classList.remove("hidden");
+      // P2.1: Show rate limit info in header when available
+      if (rateLimitRemaining !== null && rateLimitRemaining <= 5) {
+        $stepIndicator.textContent = "Configure locales (" + rateLimitRemaining + " left today)";
+        $stepIndicator.style.color = rateLimitRemaining <= 2 ? "var(--danger)" : "";
+      } else {
+        $stepIndicator.textContent = "Configure locales";
+        $stepIndicator.style.color = "";
+      }
+
+      // Frame preview — use base64 data URL (P3.2: more efficient than array transfer)
+      if (selectedFrame.imageBase64) {
+        $frameImage.src = "data:image/png;base64," + selectedFrame.imageBase64;
+      } else if (selectedFrame.imageBytes) {
+        // Fallback for legacy format
+        if ($frameImage.src && $frameImage.src.startsWith("blob:")) {
+          URL.revokeObjectURL($frameImage.src);
+        }
+        const blob = new Blob([new Uint8Array(selectedFrame.imageBytes)], { type: "image/png" });
+        $frameImage.src = URL.createObjectURL(blob);
+      } else {
+        $frameImage.src = "";
+        $frameImage.alt = "Preview unavailable";
+      }
+      $frameName.textContent = selectedFrame.name;
+      $frameDim.textContent = selectedFrame.width + " × " + selectedFrame.height;
+
+      renderLocaleRows();
+      updateGenerateButton();
+
+      // If we have results, show them
+      if (translationResults) {
+        renderResults();
+      }
+    }
+
+    // P6.5: Render the preset bar above locale rows
+    function renderPresetBar() {
+      let bar = document.getElementById("presetBar");
+      if (!bar) {
+        bar = document.createElement("div");
+        bar.id = "presetBar";
+        bar.className = "preset-bar";
+        $localeList.parentNode.insertBefore(bar, $localeList);
+      }
+      bar.innerHTML = "";
+
+      // Only show if there are presets or locales to save
+      if (localePresets.length === 0 && !localeRows.some(r => r.code)) {
+        bar.classList.add("hidden");
+        return;
+      }
+      bar.classList.remove("hidden");
+
+      // Render each preset as a clickable chip
+      localePresets.forEach(preset => {
+        const chip = document.createElement("span");
+        chip.className = "preset-chip";
+        chip.title = "Load: " + preset.locales.join(", ");
+
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = preset.name;
+        chip.appendChild(nameSpan);
+
+        const del = document.createElement("span");
+        del.className = "preset-delete";
+        del.textContent = "\u00D7";
+        del.title = "Delete preset";
+        del.addEventListener("click", (e) => {
+          e.stopPropagation();
+          parent.postMessage({ pluginMessage: { type: "delete-preset", name: preset.name } }, "*");
+        });
+        chip.appendChild(del);
+
+        chip.addEventListener("click", () => {
+          // Load this preset's locales
+          localeRows = preset.locales.map(code => {
+            const meta = LOCALES.find(l => l.code === code);
+            const defaultCurrency = meta && meta.currencies && meta.currencies.length > 0 ? meta.currencies[0] : null;
+            return { uid: uid(), code, currency: defaultCurrency };
+          });
+          renderLocaleRows();
+          updateGenerateButton();
+          saveLocalesToStorage();
+        });
+
+        bar.appendChild(chip);
+      });
+
+      // "Save preset" button if there are selected locales
+      if (localeRows.some(r => r.code)) {
+        const saveBtn = document.createElement("button");
+        saveBtn.className = "preset-save-btn";
+        saveBtn.textContent = "+ Save preset";
+        saveBtn.addEventListener("click", () => {
+          const name = prompt("Preset name:");
+          if (!name || !name.trim()) return;
+          const codes = localeRows.filter(r => r.code).map(r => r.code);
+          parent.postMessage({ pluginMessage: { type: "save-preset", name: name.trim(), locales: codes } }, "*");
+        });
+        bar.appendChild(saveBtn);
+      }
+    }
+
+    function renderLocaleRows() {
+      $localeList.innerHTML = "";
+      renderPresetBar();
+      localeRows.forEach((row, idx) => {
+        const el = document.createElement("div");
+        el.className = "locale-row fade-in";
+        // Ensure z-index layering so top dropdowns go over bottom rows
+        el.style.zIndex = 100 - idx;
+        el.style.position = "relative";
+
+        const rowContent = document.createElement("div");
+        rowContent.style.display = "flex";
+        rowContent.style.gap = "8px";
+        rowContent.style.alignItems = "flex-start";
+        rowContent.style.width = "100%";
+
+        // 1. Locale Dropdown (Larger width)
+        const localeWrap = document.createElement("div");
+        localeWrap.className = "locale-select-wrap";
+        localeWrap.style.flex = "2";
+        renderCustomDropdown(localeWrap, row, idx, "LOCALE");
+
+        // 2. Currency Dropdown (Smaller width)
+        const currencyWrap = document.createElement("div");
+        currencyWrap.className = "locale-select-wrap";
+        currencyWrap.style.flex = "1";
+        renderCustomDropdown(currencyWrap, row, idx, "CURRENCY");
+
+        rowContent.appendChild(localeWrap);
+        rowContent.appendChild(currencyWrap);
+
+        // Info line (Only under Locale for now, or could span both)
+        // We can move info inside individual wrappers if we want specific info
+        // For now, let's keep it clean and maybe remove the old info line since we have explicit currency selection
+
+        // Remove button
+        const rmBtn = document.createElement("button");
+        rmBtn.className = "locale-remove-btn";
+        rmBtn.style.marginTop = "10px"; // Align with input height
+        rmBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg>';
+        rmBtn.title = "Remove locale";
+        rmBtn.addEventListener("click", () => {
+          localeRows.splice(idx, 1);
+          renderLocaleRows();
+          updateGenerateButton();
+          saveLocalesToStorage();
+        });
+
+        const rowContainer = document.createElement("div");
+        rowContainer.style.width = "100%";
+        rowContainer.appendChild(rowContent);
+
+        // Append old info line logic but lighter? 
+        // Actually, let's just show languages under the locale dropdown
+        // And currency logic is now explicit in the dropdown
+
+        if (row.code) {
+          const meta = LOCALES.find(l => l.code === row.code);
+          if (meta && meta.languages) {
+            const info = document.createElement("div");
+            info.className = "helper-text";
+            info.textContent = "Languages: " + meta.languages.join(", ");
+            // rowContainer.appendChild(info); // Optional: add back if needed
+          }
+        }
+
+        rowContent.appendChild(rmBtn);
+        el.appendChild(rowContainer);
+        $localeList.appendChild(el);
+      });
+
+      $addLocaleBtn.disabled = localeRows.length >= 5;
+    }
+
+    // ==================================================================
+    // CUSTOM DROPDOWN LOGIC
+    // ==================================================================
+
+    function renderCustomDropdown(container, row, idx, type) {
+      const wrap = document.createElement("div");
+      wrap.className = "custom-select-wrap";
+
+      // Trigger
+      const trigger = document.createElement("div");
+      trigger.className = "custom-select-trigger";
+
+      if (type === "CURRENCY") {
+        const selectedCurrency = CURRENCIES.find(c => c.code === row.currency);
+        if (selectedCurrency) {
+          trigger.innerHTML = `<span style="display:flex;align-items:center;gap:6px;"><span style="font-size:14px;font-weight:600;">${selectedCurrency.symbol}</span> ${selectedCurrency.code}</span>`;
+          trigger.classList.add("active");
+        } else {
+          trigger.innerHTML = '<span class="placeholder">Currency…</span>';
+        }
+      } else {
+        const selectedLocale = LOCALES.find(l => l.code === row.code);
+        if (selectedLocale) {
+          trigger.innerHTML = `<span style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px">${selectedLocale.flag}</span> ${selectedLocale.label}</span>`;
+          trigger.classList.add("active");
+        } else {
+          trigger.innerHTML = '<span class="placeholder">Choose a locale…</span>';
+        }
+      }
+
+      const arrow = document.createElement("span");
+      arrow.innerHTML = '<svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      trigger.appendChild(arrow);
+
+      // Dropdown Menu
+      const menu = document.createElement("div");
+      menu.className = "custom-dropdown-menu";
+
+      // Search
+      const searchWrap = document.createElement("div");
+      searchWrap.className = "search-input-wrap";
+      const searchInput = document.createElement("input");
+      searchInput.type = "text";
+      searchInput.className = "search-input";
+      searchInput.placeholder = type === "CURRENCY" ? "Search currencies..." : "Search languages...";
+      searchInput.addEventListener("click", e => e.stopPropagation());
+      searchWrap.appendChild(searchInput);
+      menu.appendChild(searchWrap);
+
+      // Options List
+      const list = document.createElement("div");
+      list.className = "options-list";
+      menu.appendChild(list);
+
+      // Toggle Logic
+      trigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const wasOpen = menu.classList.contains("open");
+        closeAllDropdowns();
+        if (!wasOpen) {
+          menu.classList.add("open");
+          searchInput.value = "";
+          renderOptions(list, "", row.code, idx, menu, type, row.currency);
+          setTimeout(() => searchInput.focus(), 50);
+        }
+      });
+
+      // Search Logic
+      searchInput.addEventListener("input", () => {
+        renderOptions(list, searchInput.value, row.code, idx, menu, type, row.currency);
+      });
+
+      // P2.4: Keyboard navigation for the dropdown
+      searchInput.addEventListener("keydown", (e) => {
+        const items = list.querySelectorAll(".option-item:not(.disabled)");
+        if (items.length === 0) return;
+
+        let highlighted = list.querySelector(".option-item.highlighted");
+        let currentIdx = highlighted ? Array.from(items).indexOf(highlighted) : -1;
+
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          if (highlighted) highlighted.classList.remove("highlighted");
+          currentIdx = (currentIdx + 1) % items.length;
+          items[currentIdx].classList.add("highlighted");
+          items[currentIdx].scrollIntoView({ block: "nearest" });
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          if (highlighted) highlighted.classList.remove("highlighted");
+          currentIdx = currentIdx <= 0 ? items.length - 1 : currentIdx - 1;
+          items[currentIdx].classList.add("highlighted");
+          items[currentIdx].scrollIntoView({ block: "nearest" });
+        } else if (e.key === "Enter") {
+          e.preventDefault();
+          if (highlighted) highlighted.click();
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          menu.classList.remove("open");
+          trigger.focus();
+        }
+      });
+
+      // ARIA attributes for accessibility (P2.4)
+      trigger.setAttribute("role", "combobox");
+      trigger.setAttribute("aria-expanded", "false");
+      trigger.setAttribute("aria-haspopup", "listbox");
+      trigger.tabIndex = 0;
+      list.setAttribute("role", "listbox");
+
+      // Update aria-expanded when menu opens/closes
+      const observer = new MutationObserver(() => {
+        trigger.setAttribute("aria-expanded", menu.classList.contains("open") ? "true" : "false");
+      });
+      observer.observe(menu, { attributes: true, attributeFilter: ["class"] });
+
+      // Allow trigger to open via keyboard
+      trigger.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+          e.preventDefault();
+          trigger.click();
+        }
+      });
+
+      wrap.appendChild(trigger);
+      wrap.appendChild(menu);
+      container.appendChild(wrap);
+    }
+
+    function renderOptions(listContainer, query, currentCode, rowIdx, menu, type, currentCurrency) {
+      listContainer.innerHTML = "";
+      const q = query.toLowerCase();
+
+      if (type === "CURRENCY") {
+        // --- CURRENCY OPTIONS ---
+        const filtered = CURRENCIES.filter(cur => {
+          if (!q) return true;
+          return cur.code.toLowerCase().includes(q) ||
+            cur.name.toLowerCase().includes(q) ||
+            cur.symbol.toLowerCase().includes(q);
+        });
+
+        if (filtered.length === 0) {
+          const noRes = document.createElement("div");
+          noRes.className = "no-results";
+          noRes.textContent = "No results found";
+          listContainer.appendChild(noRes);
+          return;
+        }
+
+        filtered.forEach(cur => {
+          const item = document.createElement("div");
+          item.className = "option-item";
+          item.setAttribute("role", "option");
+          item.setAttribute("aria-selected", cur.code === currentCurrency ? "true" : "false");
+          if (cur.code === currentCurrency) item.classList.add("selected");
+
+          item.innerHTML = `
+                <div style="display:flex;align-items:center;gap:6px;flex:1;overflow:hidden;">
+                    <span style="font-size:14px;font-weight:600;flex-shrink:0;min-width:20px;text-align:center;">${cur.symbol}</span>
+                    <span style="font-weight:500;flex-shrink:0;">${cur.code}</span>
+                    <span style="font-size:11px;color:var(--text-tertiary);text-overflow:ellipsis;overflow:hidden;white-space:nowrap;">${cur.name}</span>
+                </div>
+                ${cur.code === currentCurrency ? '<svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+            `;
+
+          item.addEventListener("click", (e) => {
+            e.stopPropagation();
+            localeRows[rowIdx].currency = cur.code;
+            menu.classList.remove("open");
+            renderLocaleRows();
+            saveLocalesToStorage();
+          });
+
+          listContainer.appendChild(item);
+        });
+      } else {
+        // --- LOCALE OPTIONS ---
+        // Filter locales - exclude already selected (except current)
+        const otherSelectedCodes = localeRows
+          .filter((r, i) => i !== rowIdx && r.code)
+          .map(r => r.code);
+
+        const filtered = LOCALES.filter(loc => {
+          if (otherSelectedCodes.includes(loc.code)) return false;
+          if (!q) return true;
+          return loc.label.toLowerCase().includes(q) ||
+            loc.languages.some(Native => Native.toLowerCase().includes(q)) ||
+            loc.code.toLowerCase().includes(q);
+        });
+
+        if (filtered.length === 0) {
+          const noRes = document.createElement("div");
+          noRes.className = "no-results";
+          noRes.textContent = "No results found";
+          listContainer.appendChild(noRes);
+          return;
+        }
+
+        filtered.forEach(loc => {
+          const item = document.createElement("div");
+          item.className = "option-item";
+          item.setAttribute("role", "option");
+          item.setAttribute("aria-selected", loc.code === currentCode ? "true" : "false");
+          if (loc.code === currentCode) item.classList.add("selected");
+
+          const nativeName = loc.languages && loc.languages.length > 0 ? loc.languages[0] : "";
+
+          item.innerHTML = `
+                <div style="display:flex;align-items:center;gap:6px;flex:1;overflow:hidden;">
+                    <span style="font-size:16px;flex-shrink:0;">${loc.flag}</span>
+                    <span style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap;">${loc.label}</span>
+                    ${nativeName ? `<span style="font-size:11px;color:var(--text-tertiary);margin-left:4px;flex-shrink:0;">${nativeName}</span>` : ''}
+                </div>
+                ${loc.code === currentCode ? '<svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+            `;
+
+          item.addEventListener("click", (e) => {
+            e.stopPropagation();
+            localeRows[rowIdx].code = loc.code;
+            // Auto-set default currency from locale metadata
+            const defaultCurrency = loc.currencies && loc.currencies.length > 0 ? loc.currencies[0] : null;
+            localeRows[rowIdx].currency = defaultCurrency;
+            menu.classList.remove("open");
+            renderLocaleRows();
+            updateGenerateButton();
+            saveLocalesToStorage();
+          });
+
+          listContainer.appendChild(item);
+        });
+      }
+    }
+
+    function closeAllDropdowns() {
+      document.querySelectorAll(".custom-dropdown-menu.open").forEach(el => el.classList.remove("open"));
+    }
+
+    // Close on click outside
+    document.addEventListener("click", () => closeAllDropdowns());
+
+    // P2.2: Save locale selections to plugin storage whenever they change
+    function saveLocalesToStorage() {
+      const data = localeRows.filter(r => r.code).map(r => ({ code: r.code, currency: r.currency || null }));
+      parent.postMessage({
+        pluginMessage: { type: "save-locales", locales: data }
+      }, "*");
+    }
+
+
+    // P4.2: Keep footer elements persistent — just toggle disabled state
+    function updateGenerateButton() {
+      const hasLocales = localeRows.some(r => r.code);
+      const hasFrame = !!selectedFrame;
+      const enabled = hasFrame && hasLocales;
+
+      // Ensure footer has the generate button (create once if missing)
+      let btn = document.getElementById("generateBtn");
+      if (!btn || !$footer.contains(btn)) {
+        $footer.innerHTML = '';
+        btn = document.createElement("button");
+        btn.className = "btn-primary";
+        btn.id = "generateBtn";
+        btn.textContent = "Generate Translations";
+        btn.addEventListener("click", startGeneration);
+        $footer.appendChild(btn);
+        appendPrivacyLink();
+      }
+      btn.disabled = !enabled;
+    }
+
+    function renderResults() {
+      if (!translationResults) { $resultsSection.classList.add("hidden"); return; }
+      $resultsSection.classList.remove("hidden");
+      $resultsSection.innerHTML = "";
+      $stepIndicator.textContent = "Review translations";
+
+      translationResults.forEach((res, idx) => {
+        const card = document.createElement("div");
+        card.className = "result-card fade-in";
+        card.style.animationDelay = (idx * 80) + "ms";
+
+        // Build header with safe DOM methods (no innerHTML for user-influenced data)
+        const header = document.createElement("div");
+        header.className = "result-header open";
+        const flagSpan = document.createElement("span");
+        flagSpan.className = "flag";
+        flagSpan.textContent = res.localeMeta ? res.localeMeta.flag : "";
+        const labelSpan = document.createElement("span");
+        labelSpan.textContent = res.locale;
+        const chevronSpan = document.createElement("span");
+        chevronSpan.className = "chevron";
+        chevronSpan.textContent = "\u25BC";
+        header.appendChild(flagSpan);
+        header.appendChild(labelSpan);
+        header.appendChild(chevronSpan);
+
+        const body = document.createElement("div");
+        body.className = "result-body open";
+
+        res.layers.forEach(layer => {
+          const row = document.createElement("div");
+          row.className = "translation-row";
+
+          const origSpan = document.createElement("span");
+          origSpan.className = "translation-original";
+          origSpan.textContent = layer.original;
+          origSpan.title = layer.original;
+
+          const arrowSpan = document.createElement("span");
+          arrowSpan.className = "translation-arrow";
+          arrowSpan.textContent = "\u2192";
+
+          // P2.3: Make translated text editable
+          const transSpan = document.createElement("span");
+          transSpan.className = "translation-translated";
+          transSpan.textContent = layer.translated;
+          transSpan.contentEditable = "true";
+          transSpan.style.cursor = "text";
+          transSpan.style.borderBottom = "1px dashed var(--border)";
+          transSpan.style.outline = "none";
+          transSpan.style.minWidth = "40px";
+          transSpan.addEventListener("blur", () => {
+            layer.translated = transSpan.textContent || "";
+          });
+          transSpan.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") { e.preventDefault(); transSpan.blur(); }
+          });
+
+          row.appendChild(origSpan);
+          row.appendChild(arrowSpan);
+          row.appendChild(transSpan);
+          body.appendChild(row);
+        });
+
+        header.addEventListener("click", () => {
+          header.classList.toggle("open");
+          body.classList.toggle("open");
+        });
+
+        card.appendChild(header);
+        card.appendChild(body);
+        $resultsSection.appendChild(card);
+      });
+    }
+
+    // ==================================================================
+    // LOCALE ROW MANAGEMENT
+    // ==================================================================
+    $addLocaleBtn.addEventListener("click", () => {
+      if (localeRows.length >= 5) return;
+      localeRows.push({ uid: uid(), code: "", currency: null });
+      renderLocaleRows();
+      updateGenerateButton();
+    });
+
+    // Add one row by default when frame is selected
+    function ensureAtLeastOneLocale() {
+      if (localeRows.length === 0) {
+        localeRows.push({ uid: uid(), code: "", currency: null });
+      }
+    }
+
+    // ==================================================================
+    // TRANSLATION ENGINE
+    // ==================================================================
+
+    async function startGeneration() {
+      const selectedLocales = localeRows.filter(r => r.code).map(r => {
+        const meta = LOCALES.find(l => l.code === r.code);
+        return { code: r.code, meta, currency: r.currency };
+      });
+
+      if (selectedLocales.length === 0) {
+        showToast("Please select at least one locale.");
+        return;
+      }
+
+      // P6.4: Filter out already-applied locales for incremental translation
+      const newLocales = selectedLocales.filter(loc => !appliedLocaleCodes.has(loc.code));
+      if (newLocales.length === 0 && selectedLocales.length > 0) {
+        showToast("All selected locales have already been applied. Add a new locale or select a different frame.", "error");
+        return;
+      }
+
+      if (!selectedFrame || !selectedFrame.textLayers || selectedFrame.textLayers.length === 0) {
+        showToast("The selected frame has no text layers to translate.");
+        return;
+      }
+
+      isGenerating = true;
+      translationResults = null;
+      renderView();
+
+      // P6.4: Use newLocales (skips already-applied) for the actual translation
+      const localesToTranslate = newLocales.length > 0 ? newLocales : selectedLocales;
+      let appliedCount = 0;
+      try {
+        for (let i = 0; i < localesToTranslate.length; i++) {
+          const loc = localesToTranslate[i];
+          const pct = Math.round(((i) / localesToTranslate.length) * 100);
+          $genStatus.textContent = "Translating to " + loc.meta.label + "…";
+          $genProgress.style.width = pct + "%";
+
+          const translated = await translateLayers(
+            selectedFrame.textLayers,
+            loc.code,
+            loc.meta,
+            loc.currency
+          );
+
+          // Apply this locale to canvas immediately
+          applyOneLocale(loc.meta.label, loc.code, translated);
+          appliedLocaleCodes.add(loc.code); // P6.4: track applied locale
+          appliedCount++;
+          $genStatus.textContent = loc.meta.flag + " " + loc.meta.label + " applied!";
+        }
+
+        $genProgress.style.width = "100%";
+        $genStatus.textContent = "Done — " + appliedCount + " locale(s) applied!";
+
+        await new Promise(r => setTimeout(r, 400));
+        isGenerating = false;
+        isSuccess = true;
+        successInfo = {
+          count: appliedCount,
+          locales: localesToTranslate.map(loc => ({ flag: loc.meta.flag, label: loc.meta.label })),
+        };
+        renderView();
+
+      } catch (err) {
+        isGenerating = false;
+        renderView();
+        if (appliedCount > 0) {
+          showToast("Applied " + appliedCount + " locale(s) but failed on the rest: " + (err.message || err));
+        } else {
+          showToast("Translation failed: " + (err.message || err));
+        }
+      }
+    }
+
+    const WORKER_URL = "https://localyse-proxy.adiramanan98.workers.dev";
+
+    async function translateLayers(textLayers, localeCode, localeMeta, currencyCode) {
+      const payload = {
+        textLayers: textLayers.map(l => ({
+          id: l.id,
+          layerName: l.name,
+          text: l.characters,
+        })),
+        targetLocale: localeMeta.azureCode || localeCode,
+        localeLabel: localeMeta.label || "",
+        localeCurrencies: currencyCode ? [currencyCode] : (localeMeta.currencies || []),
+      };
+
+      const response = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-User-Id": figmaUserId,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.status === 429) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Daily limit reached (50/day). Please try again tomorrow.");
+      }
+
+      if (!response.ok) {
+        let errSummary = "HTTP " + response.status;
+        try {
+          const errJson = await response.json();
+          if (errJson && errJson.error) {
+            errSummary = String(errJson.error).slice(0, 200);
+          }
+        } catch (_) { }
+        throw new Error("Translation error: " + errSummary);
+      }
+
+      // P2.1: Capture rate limit remaining from response header
+      const remaining = response.headers.get("X-RateLimit-Remaining");
+      if (remaining !== null) {
+        rateLimitRemaining = parseInt(remaining);
+      }
+
+      const translatedArray = await response.json();
+
+      if (!Array.isArray(translatedArray)) {
+        throw new Error("Unexpected response structure from translation service.");
+      }
+
+      // Merge back with original text
+      return textLayers.map(layer => {
+        const match = translatedArray.find(t => t && t.id === layer.id);
+        const translated = (match && typeof match.translated === "string")
+          ? match.translated
+          : layer.characters;
+        return {
+          id: layer.id,
+          original: layer.characters,
+          translated: translated,
+        };
+      });
+    }
+
+    // ==================================================================
+    // APPLY TRANSLATIONS TO CANVAS
+    // ==================================================================
+
+    /** Apply a single locale's translations to canvas immediately. */
+    function applyOneLocale(localeLabel, localeCode, layers) {
+      if (!selectedFrame) return;
+
+      parent.postMessage({
+        pluginMessage: {
+          type: "apply-translations",
+          sourceFrameId: selectedFrame.id,
+          translations: [{
+            locale: localeLabel,
+            localeCode: localeCode,
+            layers: layers.map(l => ({ id: l.id, translated: l.translated })),
+          }],
+        }
+      }, "*");
+    }
+
+    function startOver() {
+      isSuccess = false;
+      successInfo = null;
+      translationResults = null;
+      appliedLocaleCodes.clear(); // P6.4: allow re-translation after startOver
+      renderView();
+    }
+
+    // ==================================================================
+    // MESSAGES FROM PLUGIN SANDBOX
+    // ==================================================================
+
+    window.onmessage = (event) => {
+      const msg = event.data && event.data.pluginMessage;
+      if (!msg || typeof msg.type !== "string") return;
+
+      if (msg.type === "frame-selected") {
+        selectedFrame = msg.payload;
+        translationResults = null;
+        appliedLocaleCodes.clear(); // P6.4: reset when frame changes
+        ensureAtLeastOneLocale();
+        renderView();
+      }
+
+      if (msg.type === "no-selection") {
+        selectedFrame = null;
+        translationResults = null;
+        renderView();
+      }
+
+      if (msg.type === "user-info") {
+        figmaUserId = msg.userId || "anonymous";
+      }
+
+      // P6.5: Handle presets update from storage
+      if (msg.type === "presets-updated") {
+        localePresets = Array.isArray(msg.presets) ? msg.presets : [];
+        renderPresetBar();
+      }
+
+      // P2.2: Restore saved locales on launch
+      if (msg.type === "restore-locales") {
+        if (Array.isArray(msg.locales) && msg.locales.length > 0) {
+          localeRows = msg.locales.map(entry => {
+            // Support both old format (string code) and new format ({ code, currency })
+            if (typeof entry === "string") {
+              return { uid: uid(), code: entry || "", currency: null };
+            }
+            return { uid: uid(), code: entry.code || "", currency: entry.currency || null };
+          });
+          if (selectedFrame) {
+            renderLocaleRows();
+            updateGenerateButton();
+          }
+        }
+      }
+
+      if (msg.type === "apply-done") {
+        showToast("Localised frames created on canvas!", "success");
+      }
+    };
+
+    // ==================================================================
+    // INIT
+    // ==================================================================
+    renderView();
+
+    // P6.5: Request saved presets from plugin storage on init
+    parent.postMessage({ pluginMessage: { type: "load-presets" } }, "*");
+
+    // P4.4: Robust dark theme detection with live updates
+    function applyTheme() {
+      const isDark = document.documentElement.dataset.figmaTheme === "dark" ||
+        window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.classList.toggle("figma-dark", isDark);
+    }
+    applyTheme();
+
+    // Watch for Figma theme attribute changes
+    new MutationObserver(applyTheme).observe(document.documentElement, {
+      attributes: true, attributeFilter: ["data-figma-theme"]
+    });
+    // Watch for OS-level theme changes
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
+  </script>
+</body>
+
+</html>

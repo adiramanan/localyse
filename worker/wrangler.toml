@@ -1,0 +1,7 @@
+name = "localyse-proxy"
+main = "index.js"
+compatibility_date = "2024-12-11"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "dd32266e184b4ce68df599b59d7c6181"
